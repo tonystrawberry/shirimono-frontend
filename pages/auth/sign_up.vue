@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { signUp } from '~/apis/auth'
+import { signUp } from '~/apis/v1/auth'
 
 const email = ref('')
 const password = ref('')
@@ -16,8 +16,6 @@ const handleLogin = async () => {
     const response = await signUp(email.value, password.value, rememberMe.value)
 
     console.log('Login successful:', response)
-
-    // Redirect, save token, etc.
   } catch (err) {
     console.error(err)
     error.value = 'Login failed. Please check your credentials.'

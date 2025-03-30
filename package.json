@@ -10,15 +10,18 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
+    "@internationalized/date": "^3.7.0",
     "@nuxt/content": "3.4.0",
     "@nuxt/eslint": "1.2.0",
     "@nuxt/fonts": "0.11.0",
     "@nuxt/icon": "1.11.0",
     "@nuxt/image": "1.10.0",
     "@nuxt/test-utils": "3.17.2",
-    "@nuxt/ui": "3.0.2",
+    "@nuxt/ui": "^3.0.2",
     "@nuxtjs/tailwindcss": "6.13.2",
+    "@popperjs/core": "^2.11.8",
     "@tailwindcss/postcss": "^4.0.17",
     "@tailwindcss/vite": "^4.0.17",
     "eslint": "^9.0.0",
@@ -26,6 +29,7 @@
     "nuxt": "^3.16.1",
     "tailwindcss": "^4.0.17",
     "typescript": "^5.6.3",
+    "v-calendar": "^3.1.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   }
