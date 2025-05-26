@@ -59,6 +59,16 @@
           <div>
             <ReviewCalendar />
           </div>
+
+          <!-- Grammar of the Day Card - Commented out for preview -->
+          <div class="col-span-2">
+            <GrammarOfTheDay />
+          </div>
+
+          <!-- Vocabulary of the Day Card - Commented out for preview -->
+          <div class="col-span-2">
+            <VocabularyOfTheDay />
+          </div>
         </div>
       </div>
     </main>
@@ -84,6 +94,8 @@ import UserBanner from '~/components/dashboard/UserBanner.vue'
 import CourseProgress from '~/components/dashboard/CourseProgress.vue'
 import KanjiOfTheDay from '~/components/dashboard/KanjiOfTheDay.vue'
 import ReviewCalendar from '~/components/dashboard/ReviewCalendar.vue'
+import GrammarOfTheDay from '~/components/dashboard/GrammarOfTheDay.vue'
+import VocabularyOfTheDay from '~/components/dashboard/VocabularyOfTheDay.vue'
 
 const sidebarOpen = ref(false)
 
