@@ -1,10 +1,10 @@
 <template>
   <div class="bg-gradient-to-br from-indigo-400 to-indigo-500 shadow rounded-lg">
     <div class="p-6">
-      <h2 class="text-lg font-semibold text-white mb-4">Kanji of the Day</h2>
       <div class="flex">
         <!-- Kanji Column -->
         <div class="flex flex-col items-center w-1/3">
+          <h2 class="text-lg font-semibold text-white mb-4">Kanji of the Day</h2>
           <div class="text-7xl font-bold text-white mb-6">犬</div>
           <div class="space-y-4 text-center w-full">
             <div class="grid grid-cols-2 gap-4">
