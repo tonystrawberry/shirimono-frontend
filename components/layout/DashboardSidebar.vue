@@ -9,10 +9,18 @@
           <li>
             <ul role="list" class="-mx-2 space-y-1">
               <li v-for="item in navigation" :key="item.name">
-                <a :href="item.href" :class="[item.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white', 'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold']">
+                <NuxtLink
+                  :to="item.to"
+                  :class="[
+                    isActive(item.to)
+                      ? 'bg-gray-800 text-white'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-white',
+                    'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold'
+                  ]"
+                >
                   <component :is="item.icon" class="size-6 shrink-0" aria-hidden="true" />
                   {{ item.name }}
-                </a>
+                </NuxtLink>
               </li>
             </ul>
           </li>
@@ -30,6 +38,7 @@
 </template>
 
 <script setup>
+import { useRoute } from 'vue-router'
 import {
   HomeIcon,
   AcademicCapIcon,
@@ -37,10 +46,13 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const navigation = [
-  { name: 'Home', href: '#', icon: HomeIcon, current: true },
-  { name: 'Courses', href: '#', icon: AcademicCapIcon, current: false },
-  { name: 'Settings', href: '#', icon: Cog6ToothIcon, current: false },
+  { name: 'Home', to: '/app', icon: HomeIcon },
+  { name: 'Courses', to: '/app/courses', icon: AcademicCapIcon },
+  { name: 'Settings', to: '/app/settings', icon: Cog6ToothIcon },
 ]
+
+const route = useRoute()
+const isActive = (to) => route.path === to
 
 defineProps({
   user: {
