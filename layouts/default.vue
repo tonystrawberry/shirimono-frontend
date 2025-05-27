@@ -38,7 +38,8 @@
       </a>
     </div>
 
-    <main class="lg:pl-72">
+    <main class="lg:pl-72 ">
+      <div class="kanji-background kanji-background-fixed"></div>
       <slot />
     </main>
   </div>
