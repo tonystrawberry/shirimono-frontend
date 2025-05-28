@@ -5,14 +5,14 @@
     </div>
 
     <div class="space-y-2">
-      <div class="text-gray-400">{{ point.meanings.join(', ') }}</div>
+      <div class="text-teal-400">{{ point.meanings.join(', ') }}</div>
     </div>
 
     <div v-if="point.example_sentences.length" class="space-y-3">
-      <h4 class="text-sm font-medium text-gray-400">Example Sentences</h4>
-      <div v-for="example in point.example_sentences" :key="example.id" class="bg-gray-800 rounded-lg p-4 space-y-2">
+      <h4 class="text-sm font-medium text-teal-400">Example Sentences</h4>
+      <div v-for="example in point.example_sentences" :key="example.id" class="bg-teal-900/50 rounded-lg p-4 space-y-2">
         <div v-html="example.sentence_html" class="text-white"></div>
-        <div class="text-gray-400">{{ example.translation }}</div>
+        <div class="text-teal-400">{{ example.translation }}</div>
       </div>
     </div>
   </div>

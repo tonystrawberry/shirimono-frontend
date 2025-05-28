@@ -5,14 +5,16 @@
 
     <!-- Course Progress -->
     <div class="mt-6">
-      <CourseProgress />
+      <div class="grid gap-6">
+        <CourseProgress />
+      </div>
     </div>
 
     <!-- Calendar Section -->
     <div class="mt-6 grid grid-cols-3 gap-6">
       <!-- Word of the Day Card -->
       <div class="col-span-2">
-        <KanjiOfTheDay />
+        <PointOfTheDay />
       </div>
 
       <!-- Calendar Card -->
@@ -40,6 +42,7 @@ import KanjiOfTheDay from '~/components/dashboard/KanjiOfTheDay.vue'
 import ReviewCalendar from '~/components/dashboard/ReviewCalendar.vue'
 import GrammarOfTheDay from '~/components/dashboard/GrammarOfTheDay.vue'
 import VocabularyOfTheDay from '~/components/dashboard/VocabularyOfTheDay.vue'
+import PointOfTheDay from '~/components/dashboard/PointOfTheDay.vue'
 
 definePageMeta({
   layout: 'app'
