@@ -2,6 +2,10 @@
 import { ref } from 'vue'
 import { signUp } from '~/apis/v1/auth'
 
+definePageMeta({
+  layout: 'public'
+})
+
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)

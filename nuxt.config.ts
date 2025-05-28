@@ -12,7 +12,8 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxt/test-utils',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    '@pinia/nuxt'
   ],
   css: [
     '~/assets/css/main.css',
@@ -25,5 +26,10 @@ export default defineNuxtConfig({
   },
   colorMode: {
     preference: 'light'
+  },
+  runtimeConfig: {
+    public: {
+      environment: process.env.NODE_ENV || 'development'
+    }
   }
 })

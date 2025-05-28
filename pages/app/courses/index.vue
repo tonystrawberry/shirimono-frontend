@@ -99,9 +99,19 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import {
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
+} from '@headlessui/vue'
 import { AcademicCapIcon, BookOpenIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
+
+definePageMeta({
+  layout: 'app'
+})
 
 const modalOpen = ref(false)
 const selectedCourse = ref(null)

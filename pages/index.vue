@@ -44,4 +44,8 @@
 
 <script setup>
 import { ChevronRightIcon } from '@heroicons/vue/20/solid'
+
+definePageMeta({
+  layout: 'public'
+})
 </script>

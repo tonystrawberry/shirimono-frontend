@@ -26,9 +26,9 @@
           </li>
           <li class="-mx-6 mt-auto">
             <a href="#" class="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-white hover:bg-gray-800">
-              <img class="size-8 rounded-full bg-gray-800" :src="user.imageUrl" :alt="user.name" >
+              <img v-if="usersStore.currentUser" class="size-8 rounded-full bg-gray-800" :src="usersStore.currentUser.imageUrl" :alt="usersStore.currentUser.email" >
               <span class="sr-only">Your profile</span>
-              <span aria-hidden="true">{{ user.name }}</span>
+              <span v-if="usersStore.currentUser" aria-hidden="true">{{ usersStore.currentUser.email }}</span>
             </a>
           </li>
         </ul>
@@ -44,6 +44,7 @@ import {
   AcademicCapIcon,
   Cog6ToothIcon,
 } from '@heroicons/vue/24/outline'
+import { useUsersStore } from '~/stores/users'
 
 const navigation = [
   { name: 'Home', to: '/app', icon: HomeIcon },
@@ -53,11 +54,5 @@ const navigation = [
 
 const route = useRoute()
 const isActive = (to) => route.path === to
-
-defineProps({
-  user: {
-    type: Object,
-    required: true
-  }
-})
+const usersStore = useUsersStore()
 </script>

@@ -1,37 +1,77 @@
-export const useApiFetch = async (url: string, options: { method: "GET" | "HEAD" | "PATCH" | "POST" | "PUT" | "DELETE", headers?: object } = { method: "GET" }) => {
-  const accessToken = localStorage.getItem('access-token')
-  const client = localStorage.getItem('client')
-  const expiry = localStorage.getItem('expiry')
-  const uid = localStorage.getItem('uid')
+import { useAuth } from './useAuth'
+import { useUsersStore } from '~/stores/users'
 
-  try {
-    return await $fetch(url, {
-      method: options.method,
-      headers: {
-        ...options.headers,
-        'access-token': accessToken || '',
-        client: client || '',
-        expiry: expiry || '',
-        uid: uid || '',
-      },
-      onResponse({ response }) {
-        const headers = response.headers
+export const useApiFetch = (url: string, options: {
+  method: "GET" | "HEAD" | "PATCH" | "POST" | "PUT" | "DELETE",
+  headers?: object,
+  body?: any,
+  immediate?: boolean
+} = { method: "GET", immediate: false }) => {
 
-        if (headers.get('access-token')) {
-          localStorage.setItem('access-token', headers.get('access-token')!)
-          localStorage.setItem('client', headers.get('client')!)
-          localStorage.setItem('expiry', headers.get('expiry')!)
-          localStorage.setItem('uid', headers.get('uid')!)
+  const pending = ref(false)
+  const error = ref<unknown>(null)
+  const data = ref<unknown>(null)
+  const { getAuthTokens, setAuthTokens, clearAuthTokens } = useAuth()
+  const usersStore = useUsersStore()
+
+  const execute = async () => {
+    const tokens = getAuthTokens()
+
+    pending.value = true
+    error.value = null
+
+    try {
+      const result = await $fetch(url, {
+        method: options.method,
+        body: options.body,
+        headers: {
+          ...options.headers,
+          'access-token': tokens?.accessToken || '',
+          client: tokens?.client || '',
+          expiry: tokens?.expiry || '',
+          uid: tokens?.uid || '',
+        },
+        onResponse({ response }) {
+          const headers = response.headers
+
+          if (headers.get('access-token')) {
+            setAuthTokens({
+              accessToken: headers.get('access-token')!,
+              client: headers.get('client')!,
+              expiry: headers.get('expiry')!,
+              uid: headers.get('uid')!
+            })
+          }
+        },
+        onResponseError({ response }) {
+          if (response.status === 401) {
+            // Clear both auth tokens and user state
+            clearAuthTokens()
+            usersStore.clearUser()
+            navigateTo('/')
+          }
         }
-      },
-      onResponseError({ response }) {
-        if (response.status === 401) {
-          navigateTo('/')
-        }
-      }
-    })
-  } catch (error) {
-    console.log("error", error)
-    throw error
+      })
+
+      data.value = result
+      return { data: ref(result), pending, error }
+    } catch (err) {
+      error.value = err
+      throw err
+    } finally {
+      pending.value = false
+    }
+  }
+
+  // Execute immediately if requested
+  if (options.immediate) {
+    execute()
+  }
+
+  return {
+    data: readonly(data),
+    pending: readonly(pending),
+    error: readonly(error),
+    execute
   }
 }

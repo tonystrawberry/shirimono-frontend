@@ -17,14 +17,14 @@
                   </button>
                 </div>
               </TransitionChild>
-              <DashboardSidebar :user="currentUser" />
+              <DashboardSidebar :user="usersStore.currentUser" />
             </DialogPanel>
           </TransitionChild>
         </div>
       </Dialog>
     </TransitionRoot>
 
-    <DashboardSidebar :user="currentUser" />
+    <DashboardSidebar :user="usersStore.currentUser" />
 
     <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-gray-900 px-4 py-4 shadow-xs sm:px-6 lg:hidden">
       <button type="button" class="-m-2.5 p-2.5 text-gray-400 lg:hidden" @click="sidebarOpen = true">
@@ -34,11 +34,11 @@
       <div class="flex-1 text-sm/6 font-semibold text-white">Dashboard</div>
       <a href="#">
         <span class="sr-only">Your profile</span>
-        <img class="size-8 rounded-full bg-gray-800" :src="currentUser.imageUrl" :alt="currentUser.name" >
+        <img v-if="usersStore.currentUser" class="size-8 rounded-full bg-gray-800" :src="usersStore.currentUser.imageUrl || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'" :alt="usersStore.currentUser.email" >
       </a>
     </div>
 
-    <main class="lg:pl-72 ">
+    <main class="lg:pl-72">
       <div class="kanji-background kanji-background-fixed"></div>
       <slot />
     </main>
@@ -60,11 +60,8 @@ import {
 } from '@heroicons/vue/24/outline'
 
 import DashboardSidebar from '~/components/layout/DashboardSidebar.vue'
+import { useUsersStore } from '~/stores/users'
 
 const sidebarOpen = ref(false)
-
-const currentUser = {
-  name: 'John Doe',
-  imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-}
+const usersStore = useUsersStore()
 </script>

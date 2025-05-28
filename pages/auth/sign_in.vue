@@ -1,26 +1,28 @@
 <script setup>
 import { ref } from 'vue'
-import { signIn } from '~/apis/v1/auth'
+import { useAuthV1 } from '~/composables/api/v1/useAuthV1'
+
+definePageMeta({
+  layout: 'public'
+})
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
-const loading = ref(false)
-const error = ref(null)
+const { loading, error, signIn } = useAuthV1()
+const errorMessage = ref('')
 
 // Login API client
 const handleLogin = async () => {
-  error.value = null
-  loading.value = true
+  errorMessage.value = ''
   try {
-    const response = await signIn(email.value, password.value, rememberMe.value)
-
+    const response = await signIn(email.value, password.value)
     console.log('Login successful:', response)
+    // Redirect to dashboard or home page after successful login
+    navigateTo('/app/courses')
   } catch (err) {
     console.error(err)
-    error.value = 'Login failed. Please check your credentials.'
-  } finally {
-    loading.value = false
+    errorMessage.value = 'Login failed. Please check your credentials.'
   }
 }
 </script>
@@ -96,7 +98,7 @@ const handleLogin = async () => {
               </button>
             </div>
 
-            <p v-if="error" class="text-red-500 text-sm text-center">{{ error }}</p>
+            <p v-if="errorMessage" class="text-red-500 text-sm text-center">{{ errorMessage }}</p>
           </form>
         </div>
       </div>
