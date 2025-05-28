@@ -2,76 +2,101 @@
   <div class="bg-gray-900 shadow rounded-lg flex flex-col">
     <div class="p-6 flex flex-col">
       <h2 class="text-lg font-semibold text-white mb-4">Upcoming Reviews</h2>
+      <div v-if="userReviewsStore.loading" class="text-sm text-gray-400">
+        Loading reviews...
+      </div>
+      <div v-else-if="userReviewsStore.error" class="text-sm text-red-400">
+        Error loading reviews. Please try again later.
+      </div>
       <Calendar
-        :attributes="attributes"
+        v-else
+        :attributes="calendarAttributes"
         class="custom-calendar"
         borderless
         transparent
         is-dark
+        locale="ja"
         :masks="{
-          weekdays: 'WWW',
-          title: 'MMMM YYYY'
+          title: 'YYYY年MMMM'
         }"
       />
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { computed, onMounted } from 'vue'
 import { Calendar } from 'v-calendar'
 import 'v-calendar/style.css'
+import { useUserReviewsStore } from '~/stores/userReviews'
+import { type Review } from '~/composables/api/v1/useUserReviewsV1'
+import type { AttributeConfig } from 'v-calendar/dist/types/src/utils/attribute'
 
-// Mock review data
-const reviews = [
-  {
-    date: '2024-03-20',
-    reviews: [
-      { course: 'JLPT N5', count: 25 },
-      { course: 'JLPT N4', count: 15 }
-    ]
-  },
-  {
-    date: '2024-03-21',
-    reviews: [
-      { course: 'JLPT N5', count: 30 },
-      { course: 'JLPT N3', count: 10 }
-    ]
-  },
-  {
-    date: '2024-03-22',
-    reviews: [
-      { course: 'JLPT N4', count: 20 },
-      { course: 'JLPT N3', count: 5 }
-    ]
+const userReviewsStore = useUserReviewsStore()
+
+const getReviewTypeColor = (type: string): string => {
+  switch (type) {
+    case 'CourseKanji':
+      return 'indigo'
+    case 'CourseVocabulary':
+      return 'violet'
+    case 'CourseGrammar':
+      return 'teal'
+    default:
+      return 'indigo'
   }
-]
-
-const getReviewsForDate = (date) => {
-  const formattedDate = new Date(date).toISOString().split('T')[0]
-  return reviews.find(r => r.date === formattedDate)?.reviews || []
 }
 
-const getTotalReviewsForDate = (date) => {
-  const dayReviews = getReviewsForDate(date)
-  return dayReviews.reduce((total, review) => total + review.count, 0)
+const getReviewTypeLabel = (type: string): string => {
+  switch (type) {
+    case 'CourseKanji':
+      return 'Kanji'
+    case 'CourseVocabulary':
+      return 'Vocabulary'
+    case 'CourseGrammar':
+      return 'Grammar'
+    default:
+      return type
+  }
 }
 
-// Calendar attributes for dots and popovers
-const attributes = reviews.flatMap(review => {
-  return review.reviews.map(courseReview => ({
-    dates: new Date(review.date),
-    dot: {
-      style: {
-        backgroundColor: courseReview.course === 'JLPT N5' ? '#f43f5e' :  // rose-500
-                        courseReview.course === 'JLPT N4' ? '#f59e0b' :  // amber-500
-                        '#10b981',  // emerald-500
+const calendarAttributes = computed<AttributeConfig[]>(() => {
+  const attributes: AttributeConfig[] = []
+  const reviews = userReviewsStore.upcomingReviews
+
+  // Group reviews by date and type
+  Object.entries(reviews).forEach(([date, dayReviews]) => {
+    // Group reviews by type
+    const reviewsByType = dayReviews.reduce((acc, review) => {
+      const type = review.course_point.type
+      if (!acc[type]) {
+        acc[type] = []
       }
-    },
-    popover: {
-      label: `${courseReview.course}: ${courseReview.count} reviews`,
-      hideIndicator: true,
-    }
-  }))
+      acc[type].push(review)
+      return acc
+    }, {} as Record<string, Review[]>)
+
+    // Create dots for each type
+    Object.entries(reviewsByType).forEach(([type, typeReviews]) => {
+      attributes.push({
+        key: `${date}-${type}`,
+        dates: [new Date(date)],
+        dot: {
+          color: getReviewTypeColor(type)
+        },
+        popover: {
+          label: `${getReviewTypeLabel(type)}: ${typeReviews.length} reviews`,
+          hideIndicator: false,
+        }
+      })
+    })
+  })
+
+  return attributes
+})
+
+onMounted(async () => {
+  await userReviewsStore.fetchUserReviews()
 })
 </script>
 
