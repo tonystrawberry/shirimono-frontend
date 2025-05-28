@@ -63,15 +63,24 @@
                   Start Learning
                 </DialogTitle>
                 <div class="flex flex-col gap-4">
-                  <button class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-lg transition">
+                  <button
+                    @click="startLesson('kanji')"
+                    class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-lg transition"
+                  >
                     <AcademicCapIcon class="w-6 h-6 text-white" />
                     Learn Kanji
                   </button>
-                  <button class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-semibold text-lg transition">
+                  <button
+                    @click="startLesson('vocabulary')"
+                    class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-violet-600 hover:bg-violet-700 text-white font-semibold text-lg transition"
+                  >
                     <BookOpenIcon class="w-6 h-6 text-white" />
                     Learn Vocabulary
                   </button>
-                  <button class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-lg transition">
+                  <button
+                    @click="startLesson('grammar')"
+                    class="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-semibold text-lg transition"
+                  >
                     <Cog6ToothIcon class="w-6 h-6 text-white" />
                     Learn Grammar
                   </button>
@@ -92,14 +101,21 @@
 import { ref } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import { AcademicCapIcon, BookOpenIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
+import { useRouter } from 'vue-router'
 
 const modalOpen = ref(false)
 const selectedCourse = ref(null)
+const router = useRouter()
+
+function startLesson(type) {
+  router.push('/classroom/learn')
+}
 
 function openModal(course) {
   selectedCourse.value = course
   modalOpen.value = true
 }
+
 function closeModal() {
   modalOpen.value = false
   selectedCourse.value = null
