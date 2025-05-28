@@ -6,35 +6,93 @@
         <h1 class="text-3xl font-bold text-white">Courses</h1>
       </div>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+
+    <div v-if="loading" class="text-gray-400">
+      Loading courses...
+    </div>
+    <div v-else-if="error" class="text-red-400">
+      Error loading courses. Please try again later.
+    </div>
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       <div
-        v-for="course in courses"
-        :key="course.level"
+        v-for="course in coursesWithProgress"
+        :key="course.id"
         class="relative rounded-lg shadow flex flex-col justify-between min-h-[260px] overflow-hidden bg-gray-900"
       >
         <!-- Content -->
         <div class="flex-1 p-6 flex flex-col justify-between">
           <div>
             <h2 class="text-xl font-semibold mb-2 text-white">{{ course.title }}</h2>
-            <p class="text-gray-300 mb-4">{{ course.description }}</p>
+            <p class="text-gray-300 mb-4">{{ getCourseDescription(course.slug) }}</p>
             <div class="flex gap-8 mb-4 justify-center">
               <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-indigo-400">{{ course.kanji }}</span>
+                <span class="text-2xl font-bold text-indigo-400">{{ course.kanjis_count }}</span>
                 <span class="text-xs text-indigo-300 tracking-wide uppercase">Kanji</span>
               </div>
               <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-violet-400">{{ course.vocab }}</span>
+                <span class="text-2xl font-bold text-violet-400">{{ course.vocabularies_count }}</span>
                 <span class="text-xs text-violet-300 tracking-wide uppercase">Vocabulary</span>
               </div>
               <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-teal-400">{{ course.grammar }}</span>
+                <span class="text-2xl font-bold text-teal-400">{{ course.grammars_count }}</span>
                 <span class="text-xs text-teal-300 tracking-wide uppercase">Grammar</span>
               </div>
             </div>
           </div>
-          <div class="flex gap-3 mt-4 justify-center">
-            <button @click="openModal(course)" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-4 py-2 rounded-md border border-white/10 shadow transition text-center">Start learning</button>
-            <NuxtLink :to="`/app/courses/${course.slug}`" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-md transition text-center">View lessons</NuxtLink>
+
+          <!-- Progress Bars -->
+          <div class="space-y-4">
+            <!-- Kanji Progress -->
+            <div class="flex flex-col">
+              <div class="flex justify-between mb-1.5">
+                <span class="text-sm text-indigo-400">Kanji</span>
+                <span class="text-sm text-gray-400">{{ course.progress?.kanji.completed || 0 }}/{{ course.kanjis_count }}</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-700">
+                <div class="h-2 rounded-full bg-indigo-500"
+                  :style="{ width: ((course.progress?.kanji.completed || 0) / course.kanjis_count * 100) + '%' }" />
+              </div>
+            </div>
+
+            <!-- Vocabulary Progress -->
+            <div class="flex flex-col">
+              <div class="flex justify-between mb-1.5">
+                <span class="text-sm text-violet-400">Vocabulary</span>
+                <span class="text-sm text-gray-400">{{ course.progress?.vocabulary.completed || 0 }}/{{ course.vocabularies_count }}</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-700">
+                <div class="h-2 rounded-full bg-violet-500"
+                  :style="{ width: ((course.progress?.vocabulary.completed || 0) / course.vocabularies_count * 100) + '%' }" />
+              </div>
+            </div>
+
+            <!-- Grammar Progress -->
+            <div class="flex flex-col">
+              <div class="flex justify-between mb-1.5">
+                <span class="text-sm text-teal-400">Grammar</span>
+                <span class="text-sm text-gray-400">{{ course.progress?.grammar.completed || 0 }}/{{ course.grammars_count }}</span>
+              </div>
+              <div class="h-2 rounded-full bg-gray-700">
+                <div class="h-2 rounded-full bg-teal-500"
+                  :style="{ width: ((course.progress?.grammar.completed || 0) / course.grammars_count * 100) + '%' }" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 mt-6">
+            <button
+              @click="openModal(course)"
+              class="flex-1 px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold text-lg transition border border-white/10"
+            >
+              Start Learning
+            </button>
+            <button
+              @click="router.push(`/app/courses/${course.slug}`)"
+              class="flex-1 px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-lg transition"
+            >
+              View Details
+            </button>
           </div>
         </div>
       </div>
@@ -97,8 +155,8 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import {
   Dialog,
   DialogPanel,
@@ -108,20 +166,39 @@ import {
 } from '@headlessui/vue'
 import { AcademicCapIcon, BookOpenIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
+import { useCoursesStore } from '~/stores/courses'
+import { useUserCoursesStore } from '~/stores/userCourses'
+import type { Course } from '~/composables/api/v1/useCoursesV1'
 
 definePageMeta({
   layout: 'app'
 })
 
-const modalOpen = ref(false)
-const selectedCourse = ref(null)
 const router = useRouter()
+const coursesStore = useCoursesStore()
+const userCoursesStore = useUserCoursesStore()
 
-function startLesson(type) {
-  router.push('/classroom/learn')
+const modalOpen = ref(false)
+const selectedCourse = ref<Course | null>(null)
+
+const loading = computed(() => coursesStore.loading || userCoursesStore.loading)
+const error = computed(() => coursesStore.error || userCoursesStore.error)
+
+// Combine courses with their progress
+const coursesWithProgress = computed(() => {
+  return coursesStore.courses.map(course => ({
+    ...course,
+    progress: userCoursesStore.courseProgress.find(c => c.slug === course.slug)?.progress
+  }))
+})
+
+function startLesson(type: 'kanji' | 'vocabulary' | 'grammar') {
+  if (!selectedCourse.value) return
+  router.push(`/app/courses/${selectedCourse.value.slug}/${type}/1`)
+  closeModal()
 }
 
-function openModal(course) {
+function openModal(course: Course) {
   selectedCourse.value = course
   modalOpen.value = true
 }
@@ -131,51 +208,28 @@ function closeModal() {
   selectedCourse.value = null
 }
 
-const courses = [
-  {
-    level: 5,
-    title: 'JLPT N5',
-    slug: 'jlpt-n5',
-    description: 'Beginner level. Learn basic grammar, vocabulary, and kanji for everyday communication.',
-    kanji: 100,
-    vocab: 800,
-    grammar: 80
-  },
-  {
-    level: 4,
-    title: 'JLPT N4',
-    slug: 'jlpt-n4',
-    description: 'Elementary level. Expand your grammar and vocabulary for simple conversations.',
-    kanji: 300,
-    vocab: 1500,
-    grammar: 150
-  },
-  {
-    level: 3,
-    title: 'JLPT N3',
-    slug: 'jlpt-n3',
-    description: 'Intermediate level. Understand and use more complex grammar and vocabulary.',
-    kanji: 650,
-    vocab: 3750,
-    grammar: 200
-  },
-  {
-    level: 2,
-    title: 'JLPT N2',
-    slug: 'jlpt-n2',
-    description: 'Pre-advanced level. Read and understand a wider range of topics in Japanese.',
-    kanji: 1000,
-    vocab: 6000,
-    grammar: 230
-  },
-  {
-    level: 1,
-    title: 'JLPT N1',
-    slug: 'jlpt-n1',
-    description: 'Advanced level. Master Japanese for academic and professional contexts.',
-    kanji: 2000,
-    vocab: 10000,
-    grammar: 300
-  },
-]
+function getCourseDescription(slug: string): string {
+  switch (slug) {
+    case 'n5':
+      return 'Beginner level. Learn basic grammar, vocabulary, and kanji for everyday communication.'
+    case 'n4':
+      return 'Elementary level. Expand your grammar and vocabulary for simple conversations.'
+    case 'n3':
+      return 'Intermediate level. Understand and use more complex grammar and vocabulary.'
+    case 'n2':
+      return 'Pre-advanced level. Read and understand a wider range of topics in Japanese.'
+    case 'n1':
+      return 'Advanced level. Master Japanese for academic and professional contexts.'
+    default:
+      return 'Learn Japanese language skills with our comprehensive course.'
+  }
+}
+
+// Fetch data on mount
+onMounted(async () => {
+  await Promise.all([
+    coursesStore.fetchCourses(),
+    userCoursesStore.fetchUserCourses()
+  ])
+})
 </script>
