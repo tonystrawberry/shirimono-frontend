@@ -17,6 +17,29 @@ export interface CoursesResponse {
   courses: Course[]
 }
 
+export interface CoursePoint {
+  id: number
+  title: string
+  meaning: string
+}
+
+export interface CourseLevel {
+  id: number
+  position: number
+  title: string
+  description: string
+  points: CoursePoint[]
+}
+
+export interface CourseLevelsResponse {
+  course: {
+    id: string
+    slug: string
+    title: string
+    levels: CourseLevel[]
+  }
+}
+
 export const useCoursesV1 = () => {
   const loading = ref(false)
   const error = ref<Error | null>(null)
@@ -41,9 +64,30 @@ export const useCoursesV1 = () => {
     }
   }
 
+  const fetchCourseLevels = async (slug: string, pointType: 'kanji' | 'vocabulary' | 'grammar') => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const { data } = await useApiFetch(`${API_BASE_URL}/api/v1/courses/${slug}.json?point_type=${pointType}`, {
+        method: 'GET'
+      }).execute()
+
+      const response = data.value as CourseLevelsResponse
+      return response?.course || null
+    } catch (e) {
+      console.error("Error fetching course levels:", e)
+      error.value = e as Error
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     loading,
     error,
-    fetchCourses
+    fetchCourses,
+    fetchCourseLevels
   }
 }
