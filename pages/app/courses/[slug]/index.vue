@@ -10,6 +10,9 @@
       <!-- Course Header -->
       <div class="rounded-lg bg-gray-900 shadow mb-8">
         <div class="px-4 py-3 flex items-center gap-4">
+          <NuxtLink to="/app/courses" class="text-white hover:text-gray-200">
+            <ChevronLeftIcon class="w-6 h-6" />
+          </NuxtLink>
           <component :is="getIcon(course.slug)" class="w-10 h-10 text-white" aria-hidden="true" />
           <h1 class="text-3xl font-bold text-white">{{ course.title }}</h1>
         </div>
@@ -96,13 +99,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   BookOpenIcon,
   AcademicCapIcon,
   Cog6ToothIcon,
   ChartBarIcon,
+  ChevronLeftIcon,
 } from '@heroicons/vue/24/outline'
 import { useCoursesStore } from '~/stores/courses'
 import { useUserCoursesStore } from '~/stores/userCourses'
@@ -168,8 +172,22 @@ async function fetchLevels() {
 
 function startPoint(level: CourseLevel, point: CoursePoint) {
   if (!course.value) return
-  router.push(`/app/courses/${course.value.slug}/${tab.value}/${level.position}`)
+  router.push({
+    path: `/app/courses/${course.value.slug}/${tab.value}/${level.position}`,
+    replace: true
+  })
+  history.replaceState({ selectedPointId: point.id }, '')
 }
+
+// Add watch effect to handle course not found
+watchEffect(() => {
+  if (!coursesStore.loading && !coursesStore.error && coursesStore.courses.length > 0) {
+    const courseExists = coursesStore.courses.some(c => c.slug === route.params.slug)
+    if (!courseExists) {
+      router.push('/app')
+    }
+  }
+})
 
 // Fetch data on mount
 onMounted(async () => {

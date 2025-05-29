@@ -2,6 +2,9 @@
   <div class="max-w-5xl mx-auto pt-4 pb-10 px-4">
     <div class="rounded-lg bg-gray-900 shadow mb-8">
       <div class="px-4 py-3 flex items-center gap-4">
+        <NuxtLink to="/app" class="text-white hover:text-gray-200">
+          <ChevronLeftIcon class="w-6 h-6" />
+        </NuxtLink>
         <AcademicCapIcon class="w-10 h-10 text-white" aria-hidden="true" />
         <h1 class="text-3xl font-bold text-white">Courses</h1>
       </div>
@@ -164,7 +167,7 @@ import {
   TransitionChild,
   TransitionRoot,
 } from '@headlessui/vue'
-import { AcademicCapIcon, BookOpenIcon, Cog6ToothIcon } from '@heroicons/vue/24/outline'
+import { AcademicCapIcon, BookOpenIcon, Cog6ToothIcon, ChevronLeftIcon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useCoursesStore } from '~/stores/courses'
 import { useUserCoursesStore } from '~/stores/userCourses'

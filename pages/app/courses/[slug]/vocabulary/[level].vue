@@ -3,23 +3,29 @@
     <!-- Top Banner -->
     <div class="rounded-lg bg-gray-800 shadow mb-8">
       <div class="px-4 py-4 flex items-center gap-4">
-        <NuxtLink to="/app/courses/jlpt-n5" class="text-white hover:text-gray-200">
+        <NuxtLink :to="`/app/courses/${route.params.slug}`" class="text-white hover:text-gray-200">
           <ChevronLeftIcon class="w-6 h-6" />
         </NuxtLink>
         <BookOpenIcon class="w-10 h-10 text-white" aria-hidden="true" />
-        <h1 class="text-3xl font-bold text-white">JLPT N5</h1>
+        <h1 class="text-3xl font-bold text-white">{{ course?.title }}</h1>
       </div>
     </div>
 
-    <div class="flex gap-8">
+    <div v-if="loading" class="text-gray-400">
+      Loading vocabulary level...
+    </div>
+    <div v-else-if="error" class="text-red-400">
+      {{ error }}
+    </div>
+    <div v-else class="flex gap-8">
       <!-- Sidebar -->
       <div class="w-80 flex-shrink-0">
         <div class="bg-gray-900 rounded-lg shadow overflow-hidden">
           <div class="p-4 border-b border-gray-700">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-lg font-medium text-white">{{ currentLevel.title }}</h2>
-                <p class="text-sm text-gray-400">{{ currentLevel.items.length }} items</p>
+                <h2 class="text-lg font-medium text-white">{{ currentLevel?.title }}</h2>
+                <p class="text-sm text-gray-400">{{ vocabularies.length }} items</p>
               </div>
               <div class="flex gap-2">
                 <button
@@ -31,7 +37,7 @@
                 </button>
                 <button
                   @click="navigateLevel(1)"
-                  :disabled="level >= vocabLevels.length"
+                  :disabled="level >= courseLevelCount"
                   class="p-1 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRightIcon class="w-5 h-5 text-gray-400" />
@@ -41,7 +47,7 @@
           </div>
           <nav class="flex flex-col">
             <button
-              v-for="item in currentLevel.items"
+              v-for="item in vocabularies"
               :key="item.id"
               @click="selectItem(item)"
               :class="[
@@ -128,23 +134,23 @@
               <!-- Readings -->
               <div class="grid grid-cols-3 gap-8">
                 <div class="bg-gray-800/50 rounded-lg p-4">
-                  <h3 class="uppercase tracking-wider text-xs font-medium text-violet-400 mb-2">Romaji</h3>
+                  <h3 class="uppercase tracking-wider text-xs font-medium text-violet-400 mb-2">Kana</h3>
                   <div class="text-xl text-white">
-                    {{ selectedItem.slug }}
+                    {{ selectedItem.kana }}
                   </div>
                 </div>
 
                 <div class="bg-gray-800/50 rounded-lg p-4">
-                  <h3 class="uppercase tracking-wider text-xs font-medium text-violet-400 mb-2">Meaning</h3>
+                  <h3 class="uppercase tracking-wider text-xs font-medium text-violet-400 mb-2">Meanings</h3>
                   <div class="text-xl text-white">
-                    hello
+                    {{ selectedItem.meanings.join(', ') }}
                   </div>
                 </div>
 
                 <div class="bg-gray-800/50 rounded-lg p-4">
-                  <h3 class="uppercase tracking-wider text-xs font-medium text-violet-400 mb-2">Type</h3>
+                  <h3 class="uppercase tracking-wider text-xs font-medium text-violet-400 mb-2">Types</h3>
                   <div class="text-xl text-white">
-                    Greeting
+                    {{ selectedItem.types.join(', ') }}
                   </div>
                 </div>
               </div>
@@ -202,15 +208,10 @@
 
               <!-- Example Sentences Tab -->
               <div v-else class="space-y-6">
-                <div v-for="(sentence, index) in exampleSentences" :key="index"
+                <div v-for="sentence in selectedItem.example_sentences" :key="sentence.id"
                   class="bg-gray-800/50 rounded-lg p-6"
                 >
-                  <div class="text-xl text-white mb-3">
-                    <ruby v-for="(word, idx) in sentence.words" :key="idx">
-                      {{ word.kanji || word.kana }}<rt>{{ word.reading }}</rt>
-                    </ruby>
-                  </div>
-                  <div class="text-lg text-gray-300 mb-2">{{ sentence.romaji }}</div>
+                  <div class="text-xl text-white mb-2" v-html="sentence.sentence_html"></div>
                   <div class="text-gray-400">{{ sentence.translation }}</div>
                 </div>
               </div>
@@ -222,126 +223,79 @@
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
   ChevronLeftIcon,
-  BookOpenIcon,
   ChevronRightIcon,
   EllipsisVerticalIcon,
   EyeSlashIcon,
-  EyeIcon
+  EyeIcon,
+  BookOpenIcon
 } from '@heroicons/vue/24/outline'
-import { Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/vue'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import { useCourseLevelsStore } from '~/stores/courseLevels'
+import { useCoursesStore } from '~/stores/courses'
+import type { Vocabulary } from '~/composables/api/v1/useCourseLevelsV1'
+
+definePageMeta({
+  layout: 'app'
+})
 
 const route = useRoute()
 const router = useRouter()
+const coursesStore = useCoursesStore()
+const courseLevelsStore = useCourseLevelsStore()
 
-const level = parseInt(route.params.level)
+const level = computed(() => parseInt(route.params.level as string))
+const selectedItem = ref<Vocabulary | null>(null)
+const currentTab = ref('EXAMPLE SENTENCES')
+const ignoredItems = ref(new Set<string>())
 
-// This would come from your data store or API in a real app
-const vocabLevels = [
-  {
-    id: 1,
-    level: 1,
-    title: 'Greetings',
-    items: [
-      {
-        id: 1,
-        title: 'こんにちは',
-        slug: 'konnichiwa',
-        mastery_level: 3
-      },
-      {
-        id: 2,
-        title: 'ありがとう',
-        slug: 'arigatou',
-        mastery_level: 3
-      },
-      {
-        id: 3,
-        title: 'さようなら',
-        slug: 'sayounara',
-        mastery_level: 1
-      },
-      {
-        id: 4,
-        title: 'おはよう',
-        slug: 'ohayou',
-        mastery_level: 0
-      },
-      {
-        id: 5,
-        title: 'こんばんは',
-        slug: 'konbanwa',
-        mastery_level: 0
-      }
-    ],
-    learned: 2
-  },
-  {
-    id: 2,
-    level: 2,
-    title: 'Numbers',
-    items: [
-      {
-        id: 6,
-        title: 'いち',
-        slug: 'ichi',
-        mastery_level: 3
-      },
-      {
-        id: 7,
-        title: 'に',
-        slug: 'ni',
-        mastery_level: 3
-      },
-      {
-        id: 8,
-        title: 'さん',
-        slug: 'san',
-        mastery_level: 2
-      },
-      {
-        id: 9,
-        title: 'し',
-        slug: 'shi',
-        mastery_level: 1
-      },
-      {
-        id: 10,
-        title: 'ご',
-        slug: 'go',
-        mastery_level: 0
-      }
-    ],
-    learned: 4
+// Computed properties for the view
+const loading = computed(() => courseLevelsStore.loading)
+const error = computed(() => courseLevelsStore.error)
+const currentLevel = computed(() => courseLevelsStore.currentLevel)
+const vocabularies = computed(() => currentLevel.value?.vocabularies || [])
+const course = computed(() => coursesStore.courses.find(c => c.slug === route.params.slug))
+const courseLevelCount = computed(() => course.value?.course_level_vocabularies_count || 0)
+
+// Watch for route changes to fetch new data
+watch([route], async () => {
+  await fetchData()
+}, { immediate: true })
+
+// Watch for vocabularies changes to select the point from URL
+watch([vocabularies], () => {
+  const state = history.state as { selectedPointId?: string }
+  if (vocabularies.value.length > 0 && state?.selectedPointId) {
+    const point = vocabularies.value.find(v => v.id === state.selectedPointId)
+    if (point) {
+      selectItem(point)
+    }
   }
-]
-
-// Get the current level data
-const currentLevel = computed(() => {
-  return vocabLevels.find(l => l.id === level)
 })
 
-// Get the selected item from navigation state or default to first item
-const selectedItem = ref(router.currentRoute.value.state?.selectedItem || currentLevel.value?.items[0])
+async function fetchData() {
+  if (coursesStore.courses.length === 0) {
+    await coursesStore.fetchCourses()
+  }
+  await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'vocabulary', level.value)
+}
 
-const selectItem = (item) => {
+function selectItem(item: Vocabulary) {
   selectedItem.value = item
 }
 
-const navigateLevel = (delta) => {
-  const newLevel = level + delta
-  if (newLevel >= 1 && newLevel <= vocabLevels.length) {
-    router.push(`/app/courses/jlpt-n5/vocabulary/${newLevel}`)
+function navigateLevel(delta: number) {
+  const newLevel = level.value + delta
+  if (newLevel >= 1) {
+    router.push(`/app/courses/${route.params.slug}/vocabulary/${newLevel}`)
   }
 }
 
-// Track ignored items
-const ignoredItems = ref(new Set())
-
-const toggleIgnoreItem = (itemId) => {
+function toggleIgnoreItem(itemId: string) {
   if (ignoredItems.value.has(itemId)) {
     ignoredItems.value.delete(itemId)
   } else {
@@ -349,8 +303,7 @@ const toggleIgnoreItem = (itemId) => {
   }
 }
 
-// Example related kanji - this would come from your data store or API
-const relatedKanji = [
+const relatedKanji = ref([
   {
     character: '日',
     reading: 'にち',
@@ -362,55 +315,6 @@ const relatedKanji = [
     reading: 'ほん',
     meaning: 'book, origin',
     jlptLevels: ['N5']
-  },
-  {
-    character: '人',
-    reading: 'じん',
-    meaning: 'person',
-    jlptLevels: ['N5']
-  },
-  {
-    character: '月',
-    reading: 'つき',
-    meaning: 'moon, month',
-    jlptLevels: ['N5']
   }
-]
-
-// Add currentTab ref
-const currentTab = ref('RELATED KANJI')
-
-// Add example sentences data
-const exampleSentences = [
-  {
-    words: [
-      { kana: 'おはよう', reading: 'ohayou' },
-      { kana: 'ございます', reading: 'gozaimasu' },
-      { kanji: '田中', reading: 'たなか' },
-      { kana: 'さん', reading: 'san' }
-    ],
-    romaji: 'Ohayou gozaimasu, Tanaka-san',
-    translation: 'Good morning, Mr. Tanaka'
-  },
-  {
-    words: [
-      { kana: 'おはよう', reading: 'ohayou' },
-      { kanji: '母', reading: 'はは' }
-    ],
-    romaji: 'Ohayou, haha',
-    translation: 'Good morning, mother'
-  },
-  {
-    words: [
-      { kanji: '朝', reading: 'あさ' },
-      { kana: 'から', reading: 'kara' },
-      { kana: 'おはよう', reading: 'ohayou' },
-      { kana: 'って', reading: 'tte' },
-      { kanji: '言', reading: 'い' },
-      { kana: 'ってる', reading: 'tteru' }
-    ],
-    romaji: 'Asa kara ohayou tte itteru',
-    translation: 'They\'ve been saying good morning since the morning'
-  }
-]
+])
 </script>

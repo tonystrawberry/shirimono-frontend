@@ -9,6 +9,9 @@ export interface Course {
   kanjis_count: number
   grammars_count: number
   vocabularies_count: number
+  course_level_kanjis_count: number
+  course_level_vocabularies_count: number
+  course_level_grammars_count: number
   created_at: string
   updated_at: string
 }
@@ -36,6 +39,9 @@ export interface CourseLevelsResponse {
     id: string
     slug: string
     title: string
+    course_level_kanjis_count: number
+    course_level_vocabularies_count: number
+    course_level_grammars_count: number
     levels: CourseLevel[]
   }
 }
