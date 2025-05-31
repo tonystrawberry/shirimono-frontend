@@ -73,6 +73,12 @@
               <span class="text-white font-bold">{{ level.position }}</span>
             </span>
             <span class="text-lg font-semibold text-white ml-3">{{ level.title }}</span>
+            <CourseLevelStatusBadge
+              :status="getLevelStatus(level.id)"
+              :course-slug="course.slug"
+              :point-type="tab"
+              :level="level"
+            />
           </div>
 
           <p class="text-gray-400 mb-4">{{ level.description }}</p>
@@ -111,6 +117,7 @@ import {
 import { useCoursesStore } from '~/stores/courses'
 import { useUserCoursesStore } from '~/stores/userCourses'
 import { useCoursesV1, type CourseLevel, type CoursePoint } from '~/composables/api/v1/useCoursesV1'
+import { useUserCourseLevelsStore } from '~/stores/userCourseLevels'
 
 definePageMeta({
   layout: 'app'
@@ -120,10 +127,19 @@ const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
 const userCoursesStore = useUserCoursesStore()
+const userCourseLevelsStore = useUserCourseLevelsStore()
 const coursesV1 = useCoursesV1()
 
-const loading = computed(() => coursesStore.loading || userCoursesStore.loading)
-const error = computed(() => coursesStore.error || userCoursesStore.error)
+const loading = computed(() =>
+  coursesStore.loading ||
+  userCoursesStore.loading ||
+  userCourseLevelsStore.loading
+)
+const error = computed(() =>
+  coursesStore.error ||
+  userCoursesStore.error ||
+  userCourseLevelsStore.error
+)
 const loadingLevels = computed(() => coursesStore.loadingLevels)
 const levelsError = computed(() => coursesStore.levelsError)
 
@@ -179,6 +195,10 @@ function startPoint(level: CourseLevel, point: CoursePoint) {
   history.replaceState({ selectedPointId: point.id }, '')
 }
 
+function getLevelStatus(levelId: number): string | null {
+  return userCourseLevelsStore.getLevelStatus(levelId)
+}
+
 // Add watch effect to handle course not found
 watchEffect(() => {
   if (!coursesStore.loading && !coursesStore.error && coursesStore.courses.length > 0) {
@@ -193,7 +213,8 @@ watchEffect(() => {
 onMounted(async () => {
   await Promise.all([
     coursesStore.fetchCourses(),
-    userCoursesStore.fetchUserCourses()
+    userCoursesStore.fetchUserCourses(),
+    userCourseLevelsStore.fetchUserCourseLevels()
   ])
   await fetchLevels()
 })
