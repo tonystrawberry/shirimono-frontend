@@ -1,7 +1,17 @@
 <template>
   <div class="flex flex-col items-center">
+    <!-- Progress Dots -->
+    <div class="absolute top-4 left-4 flex gap-2">
+      <div
+        v-for="i in TARGET_CORRECT_ANSWERS"
+        :key="i"
+        class="w-2.5 h-2.5 rounded-full transition-colors duration-300"
+        :class="effectiveCorrectAnswers >= i ? 'bg-green-400' : 'bg-white/30'"
+      ></div>
+    </div>
+
     <div class="text-8xl font-bold text-white mb-8">
-      {{ currentKanji.title }}
+      {{ currentExercise.question }}
     </div>
 
     <!-- Exercise Question -->
@@ -15,8 +25,53 @@
     </div>
 
     <div class="w-full max-w-md">
+      <!-- Answer Review State -->
+      <template v-if="showingAnswer">
+        <div class="text-center">
+          <div class="mb-6">
+            <p :class="isCorrect ? 'text-green-400' : 'text-red-400'" class="text-2xl font-medium mb-4">
+              {{ isCorrect ? 'Correct!' : 'Incorrect' }}
+            </p>
+
+            <!-- Input type review -->
+            <template v-if="currentExercise.question_types.includes('input')">
+              <p class="text-white/70">The correct answer was:</p>
+              <p class="text-white text-xl mt-2">
+                {{ currentExercise.accepted_answers.join(' or ') }}
+              </p>
+            </template>
+
+            <!-- Multiple choice review -->
+            <template v-else-if="currentExercise.question_types.includes('multi')">
+              <div class="space-y-3">
+                <button
+                  v-for="answer in lastShownAnswers"
+                  :key="answer"
+                  disabled
+                  class="w-full px-4 py-4 rounded-lg transition text-center text-xl"
+                  :class="[
+                    currentExercise.accepted_answers.includes(answer)
+                      ? 'bg-green-500/20 text-green-400'
+                      : (answer === selectedAnswer ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white/50')
+                  ]"
+                >
+                  {{ answer }}
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <button
+            @click="continueAfterAnswer"
+            class="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg transition text-lg"
+          >
+            Continue
+          </button>
+        </div>
+      </template>
+
       <!-- Input Exercise -->
-      <template v-if="currentExercise.question_types.includes('input')">
+      <template v-else-if="currentExercise.question_types.includes('input')">
         <div class="relative">
           <input
             v-model="userAnswer"
@@ -45,13 +100,6 @@
           </button>
         </div>
       </template>
-
-      <!-- Feedback -->
-      <div v-if="showFeedback" class="mt-4 text-center">
-        <p :class="isCorrect ? 'text-green-400' : 'text-red-400'" class="text-lg font-medium">
-          {{ isCorrect ? 'Correct!' : 'Try again' }}
-        </p>
-      </div>
     </div>
   </div>
 </template>
@@ -59,11 +107,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
-import type { Kanji, Exercise } from '~/composables/api/v1/useCourseLessonsV1'
+import type { Exercise } from '~/composables/api/v1/useCourseLessonsV1'
+
+const TARGET_CORRECT_ANSWERS = 3
 
 const props = defineProps<{
-  currentKanji: Kanji
-  currentExercise: Exercise
+  currentExercise: Exercise & {
+    numberOfCorrectAnswers?: number
+  }
 }>()
 
 const emit = defineEmits<{
@@ -73,8 +124,10 @@ const emit = defineEmits<{
 
 // State
 const userAnswer = ref('')
-const showFeedback = ref(false)
+const showingAnswer = ref(false)
 const isCorrect = ref(false)
+const selectedAnswer = ref('')
+const lastShownAnswers = ref<string[]>([])
 
 // Computed
 const exerciseTypeLabel = computed(() => {
@@ -97,41 +150,38 @@ const shuffledAnswers = computed(() => {
   return allAnswers.sort(() => Math.random() - 0.5)
 })
 
+const effectiveCorrectAnswers = computed(() => {
+  const base = props.currentExercise.numberOfCorrectAnswers ?? 0
+  return showingAnswer.value && isCorrect.value ? base + 1 : base
+})
+
 // Methods
 function checkAnswer() {
-  showFeedback.value = true
   isCorrect.value = props.currentExercise.accepted_answers.some(answer =>
     answer.toLowerCase() === userAnswer.value.toLowerCase()
   )
-
-  if (isCorrect.value) {
-    emit('correct')
-  } else {
-    emit('incorrect')
-  }
-
-  if (isCorrect.value) {
-    setTimeout(() => {
-      showFeedback.value = false
-      userAnswer.value = ''
-    }, 1500)
-  }
+  showingAnswer.value = true
 }
 
 function checkMultipleChoiceAnswer(answer: string) {
-  showFeedback.value = true
+  selectedAnswer.value = answer
   isCorrect.value = props.currentExercise.accepted_answers.includes(answer)
+  lastShownAnswers.value = shuffledAnswers.value
+  showingAnswer.value = true
+}
 
+function continueAfterAnswer() {
   if (isCorrect.value) {
     emit('correct')
   } else {
     emit('incorrect')
   }
 
-  if (isCorrect.value) {
-    setTimeout(() => {
-      showFeedback.value = false
-    }, 1500)
-  }
+  // Reset state
+  showingAnswer.value = false
+  userAnswer.value = ''
+  isCorrect.value = false
+  selectedAnswer.value = ''
+  lastShownAnswers.value = []
 }
 </script>

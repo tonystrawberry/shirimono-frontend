@@ -22,7 +22,8 @@ interface Exercise {
   exercise_type: string
   question_types: string[]
   accepted_answers: string[]
-  wrong_answers: string[]
+  wrong_answers: string[],
+  numberOfCorrectAnswers?: number
 }
 
 interface Kanji {
