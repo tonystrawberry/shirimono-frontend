@@ -105,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineComponent } from 'vue'
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
 import type { Exercise } from '~/composables/api/v1/useCourseLessonsV1'
 
@@ -117,10 +117,7 @@ const props = defineProps<{
   }
 }>()
 
-const emit = defineEmits<{
-  (e: 'correct'): void
-  (e: 'incorrect'): void
-}>()
+const emit = defineEmits(['correct', 'incorrect'])
 
 // State
 const userAnswer = ref('')
@@ -184,4 +181,10 @@ function continueAfterAnswer() {
   selectedAnswer.value = ''
   lastShownAnswers.value = []
 }
+</script>
+
+<script lang="ts">
+export default defineComponent({
+  name: 'ClassroomKanjiExercise'
+})
 </script>

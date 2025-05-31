@@ -1,17 +1,21 @@
 <template>
-  <div class="min-h-screen bg-indigo-500">
+  <div class="min-h-screen" :class="{
+    'bg-indigo-500': pointType === 'kanji',
+    'bg-violet-500': pointType === 'vocabulary',
+    'bg-teal-500': pointType === 'grammar'
+  }">
     <!-- Progress Bar -->
     <div class="fixed top-0 left-0 right-0 h-1 bg-white/10">
       <div
         class="h-full bg-white transition-all duration-300 ease-in-out"
-        :style="{ width: `${((lessonViewIndex + 1) / totalKanjis * 100)}%` }"
+        :style="{ width: `${((lessonViewIndex + 1) / totalLessons * 100)}%` }"
       ></div>
     </div>
 
     <!-- Progress Stats -->
     <div class="absolute top-8 left-1/2 -translate-x-1/2 bg-white/10 backdrop-blur-lg rounded-full px-4 py-1 text-sm text-white/90">
       <template v-if="mode === 'lesson'">
-        Lesson {{ lessonViewIndex + 1 }} / {{ totalKanjis }}
+        Lesson {{ lessonViewIndex + 1 }} / {{ totalLessons }}
       </template>
     </div>
 
@@ -58,9 +62,20 @@
 
         <div class="bg-gray-900/20 backdrop-blur-xl rounded-2xl p-8 shadow-xl">
           <!-- Show lesson content -->
-          <div v-if="mode === 'lesson' && currentKanji">
+          <div v-if="mode === 'lesson' && currentLesson">
             <ClassroomKanjiLesson
-              :current-kanji="currentKanji"
+              v-if="pointType === 'kanji'"
+              :current-kanji="currentLesson as Kanji"
+              @next="handleNextLesson"
+            />
+            <ClassroomGrammarLesson
+              v-else-if="pointType === 'grammar'"
+              :current-grammar="currentLesson as Grammar"
+              @next="handleNextLesson"
+            />
+            <ClassroomVocabularyLesson
+              v-else-if="pointType === 'vocabulary'"
+              :current-vocabulary="currentLesson as Vocabulary"
               @next="handleNextLesson"
             />
           </div>
@@ -87,9 +102,15 @@ import {
   MinusIcon,
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
-import { useCourseLessonsV1, type Kanji, type Exercise } from '~/composables/api/v1/useCourseLessonsV1'
+import { useCourseLessonsV1, type Kanji, type Grammar, type Vocabulary, type Exercise } from '~/composables/api/v1/useCourseLessonsV1'
 import { useRouter } from 'vue-router'
 import type { ClassroomNavigationState } from '~/types/navigation'
+
+// Import lesson components
+import ClassroomKanjiLesson from '~/components/classroom/ClassroomKanjiLesson.vue'
+import ClassroomGrammarLesson from '~/components/classroom/ClassroomGrammarLesson.vue'
+import ClassroomVocabularyLesson from '~/components/classroom/ClassroomVocabularyLesson.vue'
+import ClassroomKanjiExercise from '~/components/classroom/ClassroomKanjiExercise.vue'
 
 const router = useRouter()
 
@@ -100,24 +121,37 @@ const TARGET_CORRECT_ANSWERS = 3
 // Route and Navigation State
 const classroomNavigation = useState<ClassroomNavigationState>('classroom-navigation')
 const courseSlug = computed(() => classroomNavigation.value.courseSlug)
-const level = computed(() => classroomNavigation.value.level?.position)
+const level = computed(() => classroomNavigation.value.level)
+const pointType = computed(() => classroomNavigation.value.pointType)
+
+// Types
+type LessonItem = Kanji | Grammar | Vocabulary
+type LessonResponse = {
+  course_level: {
+    id: number
+    title: string
+    position: number
+  }
+  kanjis?: Kanji[]
+  grammars?: Grammar[]
+  vocabularies?: Vocabulary[]
+}
 
 // State
 const loading = ref(true)
 const error = ref<Error | null>(null)
 const mode = ref<'lesson' | 'exercise'>('lesson')
-const lessons = ref<Kanji[]>([])
+const lessons = ref<LessonItem[]>([])
 const lessonViewIndex = ref(0)
 const exercises = ref<Exercise[]>([])
 const currentExerciseIndex = ref(0)
 const lastBatchLessonViewIndex = ref(LESSONS_BATCH_SIZE - 1)
 
-
 // Composables
-const { fetchKanjiLessons } = useCourseLessonsV1()
+const { fetchKanjiLessons, fetchGrammarLessons, fetchVocabularyLessons } = useCourseLessonsV1()
 
 // Computed
-const currentKanji = computed(() => {
+const currentLesson = computed(() => {
   return lessons.value[lessonViewIndex.value]
 })
 
@@ -125,36 +159,52 @@ const currentExercise = computed(() => {
   return exercises.value[currentExerciseIndex.value]
 })
 
-const totalKanjis = computed(() => {
+const totalLessons = computed(() => {
   return lessons.value.length
 })
 
 const allDone = computed(() => {
-  // Check that all exercises in lessons have numberOfCorrectAnswers >= TARGET_CORRECT_ANSWERS
   return lessons.value.every(lesson => lesson.exercises.every(exercise => (exercise.numberOfCorrectAnswers ?? 0) >= TARGET_CORRECT_ANSWERS))
 })
 
 // Methods
-async function loadKanjiLessons() {
-  // Validate required parameters
-  if (!courseSlug.value || !level.value) {
-    error.value = new Error('Missing required parameters: course slug or level')
+async function loadLessons() {
+  if (!courseSlug.value || !level.value || !pointType.value) {
+    error.value = new Error('Missing required parameters: course slug, level or type')
     loading.value = false
     return
   }
 
   try {
     loading.value = true
-    const response = await fetchKanjiLessons(courseSlug.value, level.value)
-    console.log("response", response)
+    let response: LessonResponse
 
-    // Initialize lessons with original kanjis
-    lessons.value = response.kanjis.map(kanji => ({
-      ...kanji,
-      exercises: kanji.exercises.map(exercise => ({
+    switch (pointType.value) {
+      case 'kanji': {
+        response = await fetchKanjiLessons(courseSlug.value, level.value)
+        lessons.value = response.kanjis || []
+        break
+      }
+      case 'grammar': {
+        response = await fetchGrammarLessons(courseSlug.value, level.value)
+        lessons.value = response.grammars || []
+        break
+      }
+      case 'vocabulary': {
+        response = await fetchVocabularyLessons(courseSlug.value, level.value)
+        lessons.value = response.vocabularies || []
+        break
+      }
+      default:
+        throw new Error(`Unsupported point type: ${pointType.value}`)
+    }
+
+    // Initialize lessons with exercises
+    lessons.value = lessons.value.map(lesson => ({
+      ...lesson,
+      exercises: lesson.exercises.map(exercise => ({
         ...exercise,
-        numberOfCorrectAnswers: 0,
-        done: false
+        numberOfCorrectAnswers: 0
       }))
     }))
 
@@ -162,7 +212,7 @@ async function loadKanjiLessons() {
     exercises.value = []
   } catch (e) {
     error.value = e as Error
-    console.error('Error loading kanji lessons:', e)
+    console.error('Error loading lessons:', e)
   } finally {
     loading.value = false
   }
@@ -282,10 +332,11 @@ function goToPreviousLesson() {
 // Lifecycle
 onMounted(() => {
   // Validate navigation state
-  if (!courseSlug.value || !level.value) {
+  if (!courseSlug.value || !level.value || !pointType.value) {
+    console.log("Invalid navigation state, redirecting to courses", courseSlug.value, level.value, pointType.value)
     navigateTo('/app/courses')
     return
   }
-  loadKanjiLessons()
+  loadLessons()
 })
 </script>

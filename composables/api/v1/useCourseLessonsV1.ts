@@ -40,7 +40,7 @@ interface Vocabulary {
   id: number
   title: string
   slug: string
-  readings: string[]
+  kana: string
   meanings: string[]
   exercises: Exercise[]
 }

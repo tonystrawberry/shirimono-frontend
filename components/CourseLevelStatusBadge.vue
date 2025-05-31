@@ -11,7 +11,12 @@
     <button
       v-if="showStartButton"
       @click="startLesson"
-      class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
+      class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
+      :class="{
+        'bg-indigo-50 text-indigo-700 hover:bg-indigo-100': props.pointType === 'kanji',
+        'bg-violet-50 text-violet-700 hover:bg-violet-100': props.pointType === 'vocabulary',
+        'bg-teal-50 text-teal-700 hover:bg-teal-100': props.pointType === 'grammar'
+      }"
     >
       <PlayIcon class="w-4 h-4 mr-1" />
       Start Lesson
@@ -27,7 +32,7 @@ import type { ClassroomNavigationState } from '~/types/navigation'
 const props = defineProps<{
   status: CourseLevelStatus | null
   courseSlug: string
-  pointType: string
+  pointType: 'kanji' | 'grammar' | 'vocabulary' | ''
   level: {
     id: number
     position: number
@@ -46,11 +51,13 @@ const classroomNavigation = useState<ClassroomNavigationState>('classroom-naviga
 }))
 
 async function startLesson() {
+  console.log("startLesson", props.courseSlug, props.pointType, props.level)
+
   // Set the navigation state
   classroomNavigation.value = {
     courseSlug: props.courseSlug,
     pointType: props.pointType,
-    level: props.level
+    level: props.level.position
   }
 
   // Navigate to the classroom page
