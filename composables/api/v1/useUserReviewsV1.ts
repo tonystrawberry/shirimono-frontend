@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config'
 import { useApiFetch } from '~/composables/useApiFetch'
 
-type CoursePointType = 'CourseKanji' | 'CourseVocabulary' | 'CourseGrammar'
+type CoursePointType = 'CourseLevelKanji' | 'CourseLevelVocabulary' | 'CourseLevelGrammar'
 
 export interface CoursePoint {
   id: string
@@ -39,8 +39,7 @@ export function useUserReviewsV1() {
 
   async function submitCorrectReview(
     courseSlug: string,
-    coursePointType: string,
-    coursePointId: number,
+    level: number,
     pointExerciseType: string,
     pointExerciseId: number
   ) {
@@ -48,8 +47,7 @@ export function useUserReviewsV1() {
       method: 'POST',
       body: {
         course_slug: courseSlug,
-        course_point_type: coursePointType,
-        course_point_id: coursePointId,
+        level: level,
         point_exercise_type: pointExerciseType,
         point_exercise_id: pointExerciseId
       }

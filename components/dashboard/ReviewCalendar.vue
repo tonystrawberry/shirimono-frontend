@@ -49,14 +49,14 @@ const getReviewTypeColor = (type: string): string => {
 
 const getReviewTypeLabel = (type: string): string => {
   switch (type) {
-    case 'CourseKanji':
+    case 'CourseLevelKanji':
       return 'Kanji'
-    case 'CourseVocabulary':
+    case 'CourseLevelVocabulary':
       return 'Vocabulary'
-    case 'CourseGrammar':
+    case 'CourseLevelGrammar':
       return 'Grammar'
     default:
-      return type
+      return 'Unknown'
   }
 }
 

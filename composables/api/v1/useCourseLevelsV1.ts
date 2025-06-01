@@ -20,7 +20,8 @@ export interface Kanji {
   kunyomi_readings: string[]
   onyomi_readings: string[]
   related_kanjis: RelatedKanji[]
-  example_sentences: ExampleSentence[]
+  example_sentences: ExampleSentence[],
+  exercises: Exercise[]
 }
 
 export interface RelatedKanji {
@@ -28,6 +29,8 @@ export interface RelatedKanji {
   title: string
   meanings: string[]
 }
+
+type CoursePointType = 'CourseLevelKanji' | 'CourseLevelVocabulary' | 'CourseLevelGrammar'
 
 export interface Vocabulary {
   id: string
@@ -38,6 +41,7 @@ export interface Vocabulary {
   synonyms: VocabReference[]
   antonyms: VocabReference[]
   example_sentences: ExampleSentence[]
+  exercises: Exercise[]
 }
 
 export interface VocabReference {
@@ -52,6 +56,7 @@ export interface Grammar {
   title: string
   meanings: string[]
   example_sentences: ExampleSentence[]
+  exercises: Exercise[]
 }
 
 export interface ExampleSentence {
@@ -59,6 +64,16 @@ export interface ExampleSentence {
   sentence: string
   sentence_html: string
   translation: string
+}
+
+export interface Exercise {
+  id: number
+  question: string
+  exercise_type: string
+  question_types: string[]
+  accepted_answers: string[]
+  wrong_answers: string[],
+  numberOfCorrectAnswers?: number
 }
 
 export interface CourseLevelResponse {

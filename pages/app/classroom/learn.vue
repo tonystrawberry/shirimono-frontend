@@ -118,7 +118,7 @@ const router = useRouter()
 
 // Constants
 const LESSONS_BATCH_SIZE = 2
-const TARGET_CORRECT_ANSWERS = 2
+const TARGET_CORRECT_ANSWERS = 1
 
 // Route and Navigation State
 const classroomNavigation = useState<ClassroomNavigationState>('classroom-navigation')
@@ -293,8 +293,7 @@ async function handleReviewCorrectAnswer() {
     try {
       await submitCorrectReview(
         courseSlug.value,
-        pointType.value,
-        currentLesson.value.id,
+        level.value,
         pointType.value,
         currentExercise.id
       )

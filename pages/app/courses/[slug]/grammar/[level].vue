@@ -59,8 +59,18 @@
               <div class="flex-1 flex items-center justify-between">
                 <div class="text-sm text-gray-400">
                   <div class="flex items-center gap-1">
-                    <div class="h-2 w-2 rounded-full bg-gray-600"></div>
-                    <span class="ml-1">Not Started</span>
+                    <div
+                      class="h-2 w-2 rounded-full"
+                      :class="[
+                        getGrammarReviews(item.id).length > 0 ? 'bg-teal-500' : 'bg-gray-600'
+                      ]"
+                    ></div>
+                    <span class="ml-1" v-if="getGrammarReviews(item.id).length > 0">
+                      Studying ({{ getGrammarReviews(item.id).length }}/{{ item.exercises.length }})
+                    </span>
+                    <span class="ml-1" v-else>
+                      Not Started
+                    </span>
                   </div>
                 </div>
                 <Menu as="div" class="relative">
@@ -160,6 +170,7 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { useCourseLevelsStore } from '~/stores/courseLevels'
 import { useCoursesStore } from '~/stores/courses'
+import { useUserReviewsStore } from '~/stores/userReviews'
 import type { Grammar } from '~/composables/api/v1/useCourseLevelsV1'
 
 definePageMeta({
@@ -170,6 +181,7 @@ const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
 const courseLevelsStore = useCourseLevelsStore()
+const userReviewsStore = useUserReviewsStore()
 
 const level = computed(() => parseInt(route.params.level as string))
 const selectedItem = ref<Grammar | null>(null)
@@ -183,6 +195,14 @@ const currentLevel = computed(() => courseLevelsStore.currentLevel)
 const grammars = computed(() => currentLevel.value?.grammars || [])
 const course = computed(() => coursesStore.courses.find(c => c.slug === route.params.slug))
 const courseLevelCount = computed(() => course.value?.course_level_grammars_count || 0)
+
+// Function to get reviews for a specific grammar point
+const getGrammarReviews = (grammarId: string) => {
+  return userReviewsStore.reviews.filter(review =>
+    review.course_point.type === 'CourseLevelGrammar' &&
+    review.course_point.id === grammarId
+  )
+}
 
 // Watch for route changes to fetch new data
 watch([route], async () => {
@@ -205,6 +225,7 @@ async function fetchData() {
     await coursesStore.fetchCourses()
   }
   await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'grammar', level.value)
+  await userReviewsStore.fetchUserReviews()
 }
 
 function selectItem(item: Grammar) {

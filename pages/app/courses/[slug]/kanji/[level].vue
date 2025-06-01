@@ -60,8 +60,18 @@
               <div class="flex-1 flex items-center justify-between">
                 <div class="text-sm text-gray-400">
                   <div class="flex items-center gap-1">
-                    <div class="h-2 w-2 rounded-full bg-gray-600"></div>
-                    <span class="ml-1">Not Started</span>
+                    <div
+                      class="h-2 w-2 rounded-full"
+                      :class="[
+                        getKanjiReviews(item.id).length > 0 ? 'bg-indigo-500' : 'bg-gray-600'
+                      ]"
+                    ></div>
+                    <span class="ml-1" v-if="getKanjiReviews(item.id).length > 0">
+                      Studying ({{ getKanjiReviews(item.id).length }}/{{ item.exercises.length }})
+                    </span>
+                    <span class="ml-1" v-else>
+                      Not Started
+                    </span>
                   </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -193,6 +203,7 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { useCourseLevelsStore } from '~/stores/courseLevels'
 import { useCoursesStore } from '~/stores/courses'
+import { useUserReviewsStore } from '~/stores/userReviews'
 import type { Kanji } from '~/composables/api/v1/useCourseLevelsV1'
 
 definePageMeta({
@@ -203,6 +214,7 @@ const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
 const courseLevelsStore = useCourseLevelsStore()
+const userReviewsStore = useUserReviewsStore()
 
 const level = computed(() => parseInt(route.params.level as string))
 const selectedItem = ref<Kanji | null>(null)
@@ -215,6 +227,17 @@ const currentLevel = computed(() => courseLevelsStore.currentLevel)
 const kanjis = computed(() => currentLevel.value?.kanjis || [])
 const course = computed(() => coursesStore.courses.find(c => c.slug === route.params.slug))
 const courseLevelCount = computed(() => course.value?.course_level_kanjis_count || 0)
+
+// Function to get reviews for a specific kanji
+const getKanjiReviews = (kanjiId: string) => {
+  console.log("userReviewsStore.reviews", userReviewsStore.reviews)
+  console.log("kanjiId", kanjiId)
+
+  return userReviewsStore.reviews.filter(review =>
+    review.course_point.type === 'CourseLevelKanji' &&
+    review.course_point.id === kanjiId
+  )
+}
 
 // Watch for route changes to fetch new data
 watch([route], async () => {
@@ -237,6 +260,7 @@ async function fetchData() {
     await coursesStore.fetchCourses()
   }
   await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'kanji', level.value)
+  await userReviewsStore.fetchUserReviews()
 }
 
 function selectItem(item: Kanji) {

@@ -60,21 +60,16 @@
                 <div class="text-sm text-gray-400">
                   <div class="flex items-center gap-1">
                     <div
+                      class="h-2 w-2 rounded-full"
                       :class="[
-                        'h-2 w-2 rounded-full',
-                        item.mastery_level === 0 ? 'bg-gray-600' :
-                        item.mastery_level === 1 ? 'bg-yellow-500' :
-                        item.mastery_level === 2 ? 'bg-green-500' :
-                        'bg-violet-500'
+                        getVocabularyReviews(item.id).length > 0 ? 'bg-violet-500' : 'bg-gray-600'
                       ]"
                     ></div>
-                    <span class="ml-1">
-                      {{
-                        item.mastery_level === 0 ? 'Not Started' :
-                        item.mastery_level === 1 ? 'Learning' :
-                        item.mastery_level === 2 ? 'Practicing' :
-                        'Mastered'
-                      }}
+                    <span class="ml-1" v-if="getVocabularyReviews(item.id).length > 0">
+                      Studying ({{ getVocabularyReviews(item.id).length }}/{{ item.exercises.length }})
+                    </span>
+                    <span class="ml-1" v-else>
+                      Not Started
                     </span>
                   </div>
                 </div>
@@ -237,6 +232,7 @@ import {
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 import { useCourseLevelsStore } from '~/stores/courseLevels'
 import { useCoursesStore } from '~/stores/courses'
+import { useUserReviewsStore } from '~/stores/userReviews'
 import type { Vocabulary } from '~/composables/api/v1/useCourseLevelsV1'
 
 definePageMeta({
@@ -247,6 +243,7 @@ const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
 const courseLevelsStore = useCourseLevelsStore()
+const userReviewsStore = useUserReviewsStore()
 
 const level = computed(() => parseInt(route.params.level as string))
 const selectedItem = ref<Vocabulary | null>(null)
@@ -260,6 +257,14 @@ const currentLevel = computed(() => courseLevelsStore.currentLevel)
 const vocabularies = computed(() => currentLevel.value?.vocabularies || [])
 const course = computed(() => coursesStore.courses.find(c => c.slug === route.params.slug))
 const courseLevelCount = computed(() => course.value?.course_level_vocabularies_count || 0)
+
+// Function to get reviews for a specific vocabulary
+const getVocabularyReviews = (vocabularyId: string) => {
+  return userReviewsStore.reviews.filter(review =>
+    review.course_point.type === 'CourseLevelVocabulary' &&
+    review.course_point.id === vocabularyId
+  )
+}
 
 // Watch for route changes to fetch new data
 watch([route], async () => {
@@ -282,6 +287,7 @@ async function fetchData() {
     await coursesStore.fetchCourses()
   }
   await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'vocabulary', level.value)
+  await userReviewsStore.fetchUserReviews()
 }
 
 function selectItem(item: Vocabulary) {
