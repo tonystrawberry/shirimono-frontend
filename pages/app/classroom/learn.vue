@@ -86,6 +86,7 @@
               :current-exercise="currentExercise"
               @correct="handleReviewCorrectAnswer"
               @incorrect="handleIncorrectAnswer"
+              :target-correct-answers="TARGET_CORRECT_ANSWERS"
             />
           </div>
         </div>
@@ -103,6 +104,7 @@ import {
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
 import { useCourseLessonsV1, type Kanji, type Grammar, type Vocabulary, type Exercise } from '~/composables/api/v1/useCourseLessonsV1'
+import { useUserReviewsV1 } from '~/composables/api/v1/useUserReviewsV1'
 import { useRouter } from 'vue-router'
 import type { ClassroomNavigationState } from '~/types/navigation'
 
@@ -116,7 +118,7 @@ const router = useRouter()
 
 // Constants
 const LESSONS_BATCH_SIZE = 2
-const TARGET_CORRECT_ANSWERS = 3
+const TARGET_CORRECT_ANSWERS = 2
 
 // Route and Navigation State
 const classroomNavigation = useState<ClassroomNavigationState>('classroom-navigation')
@@ -149,6 +151,7 @@ const lastBatchLessonViewIndex = ref(LESSONS_BATCH_SIZE - 1)
 
 // Composables
 const { fetchKanjiLessons, fetchGrammarLessons, fetchVocabularyLessons } = useCourseLessonsV1()
+const { submitCorrectReview } = useUserReviewsV1()
 
 // Computed
 const currentLesson = computed(() => {
@@ -277,7 +280,7 @@ function reinjectLessonsForReview() {
   }
 }
 
-function handleReviewCorrectAnswer() {
+async function handleReviewCorrectAnswer() {
   // Increment correct answers for current exercise
   const currentExercise = exercises.value[currentExerciseIndex.value]
   if (!currentExercise.numberOfCorrectAnswers) {
@@ -285,10 +288,24 @@ function handleReviewCorrectAnswer() {
   }
   currentExercise.numberOfCorrectAnswers++
 
+  // If exercise is mastered, submit to API
+  if (currentExercise.numberOfCorrectAnswers === TARGET_CORRECT_ANSWERS) {
+    try {
+      await submitCorrectReview(
+        courseSlug.value,
+        pointType.value,
+        currentLesson.value.id,
+        pointType.value,
+        currentExercise.id
+      )
+    } catch (e) {
+      console.error('Error submitting correct review:', e)
+    }
+  }
+
   exercises.value.splice(currentExerciseIndex.value, 1)
 
   if (exercises.value.length === 0) {
-
     if (lessonViewIndex.value < lessons.value.length - 1) {
       mode.value = 'lesson'
       lessonViewIndex.value++
@@ -298,7 +315,6 @@ function handleReviewCorrectAnswer() {
   }
 
   if (allDone.value) {
-    console.log("Maybe here????")
     navigateTo('/app')
   }
 

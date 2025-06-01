@@ -27,8 +27,8 @@ export interface UserReviewsResponse {
   user_reviews: Review[]
 }
 
-export const useUserReviewsV1 = () => {
-  const fetchUserReviews = async () => {
+export function useUserReviewsV1() {
+  async function fetchUserReviews() {
     const { data } = await useApiFetch(`${API_BASE_URL}/api/v1/user_reviews`, {
       method: 'GET'
     }).execute()
@@ -37,7 +37,49 @@ export const useUserReviewsV1 = () => {
     return response?.user_reviews || []
   }
 
+  async function submitCorrectReview(
+    courseSlug: string,
+    coursePointType: string,
+    coursePointId: number,
+    pointExerciseType: string,
+    pointExerciseId: number
+  ) {
+    const { data } = await useApiFetch(`${API_BASE_URL}/api/v1/user_reviews/correct_review`, {
+      method: 'POST',
+      body: {
+        course_slug: courseSlug,
+        course_point_type: coursePointType,
+        course_point_id: coursePointId,
+        point_exercise_type: pointExerciseType,
+        point_exercise_id: pointExerciseId
+      }
+    }).execute()
+    return data.value
+  }
+
+  async function submitIncorrectReview(
+    courseSlug: string,
+    coursePointType: string,
+    coursePointId: number,
+    pointExerciseType: string,
+    pointExerciseId: number
+  ) {
+    const { data } = await useApiFetch(`${API_BASE_URL}/api/v1/user_reviews/incorrect_review`, {
+      method: 'POST',
+      body: {
+        course_slug: courseSlug,
+        course_point_type: coursePointType,
+        course_point_id: coursePointId,
+        point_exercise_type: pointExerciseType,
+        point_exercise_id: pointExerciseId
+      }
+    }).execute()
+    return data.value
+  }
+
   return {
-    fetchUserReviews
+    fetchUserReviews,
+    submitCorrectReview,
+    submitIncorrectReview
   }
 }

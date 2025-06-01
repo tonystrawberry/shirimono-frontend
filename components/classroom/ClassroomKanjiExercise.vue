@@ -3,7 +3,7 @@
     <!-- Progress Dots -->
     <div class="absolute top-4 left-4 flex gap-2">
       <div
-        v-for="i in TARGET_CORRECT_ANSWERS"
+        v-for="i in targetCorrectAnswers"
         :key="i"
         class="w-2.5 h-2.5 rounded-full transition-colors duration-300"
         :class="effectiveCorrectAnswers >= i ? 'bg-green-400' : 'bg-white/30'"
@@ -109,12 +109,11 @@ import { ref, computed, defineComponent } from 'vue'
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
 import type { Exercise } from '~/composables/api/v1/useCourseLessonsV1'
 
-const TARGET_CORRECT_ANSWERS = 3
-
 const props = defineProps<{
   currentExercise: Exercise & {
     numberOfCorrectAnswers?: number
-  }
+  },
+  targetCorrectAnswers: number
 }>()
 
 const emit = defineEmits(['correct', 'incorrect'])
