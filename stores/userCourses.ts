@@ -50,21 +50,33 @@ export const useUserCoursesStore = defineStore('userCourses', {
           }
         }
 
+        // Use userReviewsStore to get the number of completed kanji, vocabulary, and grammar reviews
+        const userReviewsStore = useUserReviewsStore()
+
+        const kanjiReviews = userReviewsStore.reviews.filter(review => review.course_point.type === 'CourseLevelKanji' && review.course.id === course.id)
+        const vocabularyReviews = userReviewsStore.reviews.filter(review => review.course_point.type === 'CourseLevelVocabulary' && review.course.id === course.id)
+        const grammarReviews = userReviewsStore.reviews.filter(review => review.course_point.type === 'CourseLevelGrammar' && review.course.id === course.id)
+
+        // Get unique number of reviews.course_point.id by type
+        const uniqueKanjiReviews = new Set(kanjiReviews.map(review => review.course_point.id))
+        const uniqueVocabularyReviews = new Set(vocabularyReviews.map(review => review.course_point.id))
+        const uniqueGrammarReviews = new Set(grammarReviews.map(review => review.course_point.id))
+
         return {
           id: course.id,
           title: course.title,
           slug: course.slug,
           progress: {
             kanji: {
-              completed: userCourse?.kanji_user_reviews_count || 0,
+              completed: uniqueKanjiReviews.size,
               total: courseTotals.kanjis_count
             },
             vocabulary: {
-              completed: userCourse?.vocabulary_user_reviews_count || 0,
+              completed: uniqueVocabularyReviews.size,
               total: courseTotals.vocabularies_count
             },
             grammar: {
-              completed: userCourse?.grammar_user_reviews_count || 0,
+              completed: uniqueGrammarReviews.size,
               total: courseTotals.grammars_count
             }
           }
