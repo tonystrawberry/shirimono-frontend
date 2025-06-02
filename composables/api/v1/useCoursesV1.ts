@@ -12,6 +12,11 @@ export interface Course {
   course_level_kanjis_count: number
   course_level_vocabularies_count: number
   course_level_grammars_count: number
+  progress: {
+    kanjis_count: number
+    grammars_count: number
+    vocabularies_count: number
+  }
   created_at: string
   updated_at: string
 }

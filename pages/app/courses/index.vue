@@ -18,7 +18,7 @@
     </div>
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
       <div
-        v-for="course in coursesWithProgress"
+        v-for="course in coursesStore.courses"
         :key="course.id"
         class="relative rounded-lg shadow flex flex-col justify-between min-h-[260px] overflow-hidden bg-gray-900"
       >
@@ -49,11 +49,11 @@
             <div class="flex flex-col">
               <div class="flex justify-between mb-1.5">
                 <span class="text-sm text-indigo-400">Kanji</span>
-                <span class="text-sm text-gray-400">{{ course.progress?.kanji.completed || 0 }}/{{ course.kanjis_count }}</span>
+                <span class="text-sm text-gray-400">{{ course.progress.kanjis_count || 0 }}/{{ course.kanjis_count }}</span>
               </div>
               <div class="h-2 rounded-full bg-gray-700">
                 <div class="h-2 rounded-full bg-indigo-500"
-                  :style="{ width: ((course.progress?.kanji.completed || 0) / course.kanjis_count * 100) + '%' }" />
+                  :style="{ width: ((course.progress.kanjis_count || 0) / course.kanjis_count * 100) + '%' }" />
               </div>
             </div>
 
@@ -61,11 +61,11 @@
             <div class="flex flex-col">
               <div class="flex justify-between mb-1.5">
                 <span class="text-sm text-violet-400">Vocabulary</span>
-                <span class="text-sm text-gray-400">{{ course.progress?.vocabulary.completed || 0 }}/{{ course.vocabularies_count }}</span>
+                <span class="text-sm text-gray-400">{{ course.progress.vocabularies_count || 0 }}/{{ course.vocabularies_count }}</span>
               </div>
               <div class="h-2 rounded-full bg-gray-700">
                 <div class="h-2 rounded-full bg-violet-500"
-                  :style="{ width: ((course.progress?.vocabulary.completed || 0) / course.vocabularies_count * 100) + '%' }" />
+                  :style="{ width: ((course.progress.vocabularies_count || 0) / course.vocabularies_count * 100) + '%' }" />
               </div>
             </div>
 
@@ -73,11 +73,11 @@
             <div class="flex flex-col">
               <div class="flex justify-between mb-1.5">
                 <span class="text-sm text-teal-400">Grammar</span>
-                <span class="text-sm text-gray-400">{{ course.progress?.grammar.completed || 0 }}/{{ course.grammars_count }}</span>
+                <span class="text-sm text-gray-400">{{ course.progress.grammars_count || 0 }}/{{ course.grammars_count }}</span>
               </div>
               <div class="h-2 rounded-full bg-gray-700">
                 <div class="h-2 rounded-full bg-teal-500"
-                  :style="{ width: ((course.progress?.grammar.completed || 0) / course.grammars_count * 100) + '%' }" />
+                  :style="{ width: ((course.progress.grammars_count || 0) / course.grammars_count * 100) + '%' }" />
               </div>
             </div>
           </div>
@@ -179,21 +179,12 @@ definePageMeta({
 
 const router = useRouter()
 const coursesStore = useCoursesStore()
-const userCoursesStore = useUserCoursesStore()
 
 const modalOpen = ref(false)
 const selectedCourse = ref<Course | null>(null)
 
-const loading = computed(() => coursesStore.loading || userCoursesStore.loading)
-const error = computed(() => coursesStore.error || userCoursesStore.error)
-
-// Combine courses with their progress
-const coursesWithProgress = computed(() => {
-  return coursesStore.courses.map(course => ({
-    ...course,
-    progress: userCoursesStore.courseProgress.find(c => c.slug === course.slug)?.progress
-  }))
-})
+const loading = computed(() => coursesStore.loading)
+const error = computed(() => coursesStore.error)
 
 function startLesson(type: 'kanji' | 'vocabulary' | 'grammar') {
   if (!selectedCourse.value) return
@@ -232,7 +223,6 @@ function getCourseDescription(slug: string): string {
 onMounted(async () => {
   await Promise.all([
     coursesStore.fetchCourses(),
-    userCoursesStore.fetchUserCourses()
   ])
 })
 </script>
