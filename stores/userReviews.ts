@@ -1,8 +1,12 @@
 import { defineStore } from 'pinia'
-import { useUserReviewsV1, type Review } from '~/composables/api/v1/useUserReviewsV1'
+import { useUserReviewsV1, type UserReviewGrammar, type UserReviewKanji, type UserReviewVocabulary } from '~/composables/api/v1/useUserReviewsV1'
 
-interface ReviewsByDate {
-  [date: string]: Review[]
+interface UserReviewsByDate {
+  [date: string]: {
+    userReviewKanjis: UserReviewKanji[]
+    userReviewVocabularies: UserReviewVocabulary[]
+    userReviewGrammars: UserReviewGrammar[]
+  }
 }
 
 interface CourseProgress {
@@ -17,49 +21,79 @@ interface CourseProgress {
 
 export const useUserReviewsStore = defineStore('userReviews', {
   state: () => ({
-    reviews: [] as Review[],
+    userReviewKanjis: [] as UserReviewKanji[],
+    userReviewVocabularies: [] as UserReviewVocabulary[],
+    userReviewGrammars: [] as UserReviewGrammar[],
     loading: false,
     error: null as Error | null
   }),
 
   getters: {
-    upcomingReviews: (state): ReviewsByDate => {
-      const reviewsByDate: ReviewsByDate = {}
+    upcomingReviews: (state): UserReviewsByDate => {
+      const userReviewsByDate: UserReviewsByDate = {}
 
-      state.reviews.forEach(review => {
-        const date = new Date(review.next_review_at).toISOString().split('T')[0]
-        if (!reviewsByDate[date]) {
-          reviewsByDate[date] = []
+      state.userReviewKanjis.forEach(userReviewKanji => {
+        const date = new Date(userReviewKanji.next_review_at).toISOString().split('T')[0]
+        if (!userReviewsByDate[date]) {
+          userReviewsByDate[date] = {
+            userReviewKanjis: [],
+            userReviewVocabularies: [],
+            userReviewGrammars: []
+          }
         }
-        reviewsByDate[date].push(review)
+        userReviewsByDate[date].userReviewKanjis.push(userReviewKanji)
       })
 
-      return reviewsByDate
+      state.userReviewVocabularies.forEach(userReviewVocabulary => {
+        const date = new Date(userReviewVocabulary.next_review_at).toISOString().split('T')[0]
+        if (!userReviewsByDate[date]) {
+          userReviewsByDate[date] = {
+            userReviewKanjis: [],
+            userReviewVocabularies: [],
+            userReviewGrammars: []
+          }
+        }
+        userReviewsByDate[date].userReviewVocabularies.push(userReviewVocabulary)
+      })
+
+      state.userReviewGrammars.forEach(userReviewGrammar => {
+        const date = new Date(userReviewGrammar.next_review_at).toISOString().split('T')[0]
+        if (!userReviewsByDate[date]) {
+          userReviewsByDate[date] = {
+            userReviewKanjis: [],
+            userReviewVocabularies: [],
+            userReviewGrammars: []
+          }
+        }
+        userReviewsByDate[date].userReviewGrammars.push(userReviewGrammar)
+      })
+
+      return userReviewsByDate
     },
 
     reviewProgress: (state): CourseProgress[] => {
       // Group reviews by course
-      const courseReviews = state.reviews.reduce((acc, review) => {
-        const courseId = review.course.id
+      const courseReviews = state.userReviewKanjis.reduce((acc, review) => {
+        const courseId = review.id
         if (!acc[courseId]) {
           acc[courseId] = {
             courseId,
-            courseTitle: review.course.title,
-            reviews: []
+            courseTitle: review.kanji_id.toString(),
+            userReviewKanjis: []
           }
         }
-        acc[courseId].reviews.push(review)
+        acc[courseId].userReviewKanjis.push(review)
         return acc
-      }, {} as Record<string, { courseId: string; courseTitle: string; reviews: Review[] }>)
+      }, {} as Record<string, { courseId: string; courseTitle: string; userReviewKanjis: UserReviewKanji[] }>)
 
       // Calculate stats for each course
-      return Object.values(courseReviews).map(({ courseId, courseTitle, reviews }) => ({
+      return Object.values(courseReviews).map(({ courseId, courseTitle, userReviewKanjis }) => ({
         courseId,
         courseTitle,
         stats: {
-          total: reviews.length,
-          correct: reviews.reduce((sum, review) => sum + review.number_of_correct_reviews, 0),
-          byStatus: reviews.reduce((acc, review) => {
+          total: userReviewKanjis.length,
+          correct: userReviewKanjis.reduce((sum, review) => sum + review.number_of_correct_reviews, 0),
+          byStatus: userReviewKanjis.reduce((acc, review) => {
             acc[review.memorization_status] = (acc[review.memorization_status] || 0) + 1
             return acc
           }, {} as Record<string, number>)
@@ -75,10 +109,13 @@ export const useUserReviewsStore = defineStore('userReviews', {
 
       try {
         const { fetchUserReviews } = useUserReviewsV1()
-        this.reviews = await fetchUserReviews()
+        const reviews = await fetchUserReviews()
+
+        this.userReviewKanjis = reviews.user_review_kanjis
+        this.userReviewVocabularies = reviews.user_review_vocabularies
+        this.userReviewGrammars = reviews.user_review_grammars
       } catch (err) {
         this.error = err as Error
-        this.reviews = []
       } finally {
         this.loading = false
       }

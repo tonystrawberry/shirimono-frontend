@@ -38,10 +38,7 @@
 <script setup>
 import UserBanner from '~/components/dashboard/UserBanner.vue'
 import CourseProgress from '~/components/dashboard/CourseProgress.vue'
-import KanjiOfTheDay from '~/components/dashboard/KanjiOfTheDay.vue'
 import ReviewCalendar from '~/components/dashboard/ReviewCalendar.vue'
-import GrammarOfTheDay from '~/components/dashboard/GrammarOfTheDay.vue'
-import VocabularyOfTheDay from '~/components/dashboard/VocabularyOfTheDay.vue'
 import PointOfTheDay from '~/components/dashboard/PointOfTheDay.vue'
 
 definePageMeta({

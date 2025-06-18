@@ -29,7 +29,6 @@ import { computed, onMounted } from 'vue'
 import { Calendar } from 'v-calendar'
 import 'v-calendar/style.css'
 import { useUserReviewsStore } from '~/stores/userReviews'
-import { type Review } from '~/composables/api/v1/useUserReviewsV1'
 import type { AttributeConfig } from 'v-calendar/dist/types/src/utils/attribute'
 
 const userReviewsStore = useUserReviewsStore()
@@ -64,32 +63,48 @@ const calendarAttributes = computed<AttributeConfig[]>(() => {
   const attributes: AttributeConfig[] = []
   const reviews = userReviewsStore.upcomingReviews
 
-  // Group reviews by date and type
   Object.entries(reviews).forEach(([date, dayReviews]) => {
-    // Group reviews by type
-    const reviewsByType = dayReviews.reduce((acc, review) => {
-      const type = review.course_point.type
-      if (!acc[type]) {
-        acc[type] = []
-      }
-      acc[type].push(review)
-      return acc
-    }, {} as Record<string, Review[]>)
-
-    // Create dots for each type
-    Object.entries(reviewsByType).forEach(([type, typeReviews]) => {
+    if (dayReviews.userReviewKanjis.length > 0) {
       attributes.push({
-        key: `${date}-${type}`,
+        key: `${date}-kanji`,
         dates: [new Date(date)],
         dot: {
-          color: getReviewTypeColor(type)
+          color: getReviewTypeColor('CourseKanji')
         },
         popover: {
-          label: `${getReviewTypeLabel(type)}: ${typeReviews.length} reviews`,
+          label: `Kanji: ${dayReviews.userReviewKanjis.length} reviews`,
           hideIndicator: false,
         }
       })
-    })
+    }
+
+    if (dayReviews.userReviewVocabularies.length > 0) {
+      attributes.push({
+        key: `${date}-vocabulary`,
+        dates: [new Date(date)],
+        dot: {
+          color: getReviewTypeColor('CourseVocabulary')
+        },
+        popover: {
+          label: `Vocabulary: ${dayReviews.userReviewVocabularies.length} reviews`,
+          hideIndicator: false,
+        }
+      })
+    }
+
+    if (dayReviews.userReviewGrammars.length > 0) {
+      attributes.push({
+        key: `${date}-grammar`,
+        dates: [new Date(date)],
+        dot: {
+          color: getReviewTypeColor('CourseGrammar')
+        },
+        popover: {
+          label: `Grammar: ${dayReviews.userReviewGrammars.length} reviews`,
+          hideIndicator: false,
+        }
+      })
+    }
   })
 
   return attributes
