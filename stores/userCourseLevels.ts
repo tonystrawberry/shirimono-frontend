@@ -1,25 +1,42 @@
 import { defineStore } from 'pinia'
-import { useUserCourseLevelsV1, type UserCourseLevel, type CourseLevelStatus } from '~/composables/api/v1/useUserCourseLevelsV1'
+import { useUserCourseLevelsV1, type UserCourseLevelKanji, type CourseLevelStatus, type UserCourseLevelGrammar, type UserCourseLevelVocabulary } from '~/composables/api/v1/useUserCourseLevelsV1'
 
 interface UserCourseLevelsState {
-  userCourseLevels: UserCourseLevel[]
+  userCourseLevelKanjis: UserCourseLevelKanji[]
+  userCourseLevelGrammars: UserCourseLevelGrammar[]
+  userCourseLevelVocabularies: UserCourseLevelVocabulary[]
   loading: boolean
   error: Error | null
 }
 
 export const useUserCourseLevelsStore = defineStore('userCourseLevels', {
   state: (): UserCourseLevelsState => ({
-    userCourseLevels: [],
+    userCourseLevelKanjis: [],
+    userCourseLevelGrammars: [],
+    userCourseLevelVocabularies: [],
     loading: false,
     error: null
   }),
 
   getters: {
-    getLevelStatus: (state) => (levelId: number): CourseLevelStatus | null => {
-      const userLevel = state.userCourseLevels.find(
-        level => level.course_level.id === levelId
-      )
-      return userLevel?.status || null
+    getLevelStatus: (state) => (type: 'kanji' | 'grammar' | 'vocabulary', levelId: number): CourseLevelStatus | null => {
+      switch (type) {
+        case 'kanji':
+          const userLevelKanji = state.userCourseLevelKanjis.find(
+            userCourselevel => userCourselevel.course_level_kanji.id === levelId
+          )
+          return userLevelKanji?.status || null
+        case 'grammar':
+          const userLevelGrammar = state.userCourseLevelGrammars.find(
+            userCourselevel => userCourselevel.course_level_grammar.id === levelId
+          )
+          return userLevelGrammar?.status || null
+        case 'vocabulary':
+          const userLevelVocabulary = state.userCourseLevelVocabularies.find(
+            userCourselevel => userCourselevel.course_level_vocabulary.id === levelId
+          )
+          return userLevelVocabulary?.status || null
+      }
     }
   },
 
@@ -31,10 +48,14 @@ export const useUserCourseLevelsStore = defineStore('userCourseLevels', {
       try {
         const { fetchUserCourseLevels } = useUserCourseLevelsV1()
         const response = await fetchUserCourseLevels()
-        this.userCourseLevels = response.user_course_levels
+        this.userCourseLevelKanjis = response.user_course_level_kanjis
+        this.userCourseLevelGrammars = response.user_course_level_grammars
+        this.userCourseLevelVocabularies = response.user_course_level_vocabularies
       } catch (err) {
         this.error = err as Error
-        this.userCourseLevels = []
+        this.userCourseLevelKanjis = []
+        this.userCourseLevelGrammars = []
+        this.userCourseLevelVocabularies = []
       } finally {
         this.loading = false
       }

@@ -30,7 +30,7 @@ import type { CourseLevelStatus } from '~/composables/api/v1/useUserCourseLevels
 import type { ClassroomNavigationState } from '~/types/navigation'
 
 const props = defineProps<{
-  status: CourseLevelStatus | null
+  status: CourseLevelStatus | null | undefined
   courseSlug: string
   pointType: 'kanji' | 'grammar' | 'vocabulary' | ''
   level: {

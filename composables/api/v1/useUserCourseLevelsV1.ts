@@ -26,16 +26,61 @@ export type CourseLevelStatus =
   | 'in_progress_advanced' // Working on advanced exercises
   | 'done'                // All exercises completed with required mastery
 
-interface UserCourseLevel {
+interface CourseLevelKanji {
+  id: number
+  title: string
+  description: string
+  position: number
+  course_level_kanji_links_count: number
+  course: Course
+}
+
+interface CourseLevelGrammar {
+  id: number
+  title: string
+  description: string
+  position: number
+  course_level_grammar_links_count: number
+  course: Course
+}
+
+interface CourseLevelVocabulary {
+  id: number
+  title: string
+  description: string
+  position: number
+  course_level_vocabulary_links_count: number
+  course: Course
+}
+
+interface UserCourseLevelKanji {
   id: number
   status: CourseLevelStatus
   created_at: string
   updated_at: string
-  course_level: CourseLevel
+  course_level_kanji: CourseLevelKanji
+}
+
+interface UserCourseLevelGrammar {
+  id: number
+  status: CourseLevelStatus
+  created_at: string
+  updated_at: string
+  course_level_grammar: CourseLevelGrammar
+}
+
+interface UserCourseLevelVocabulary {
+  id: number
+  status: CourseLevelStatus
+  created_at: string
+  updated_at: string
+  course_level_vocabulary: CourseLevelVocabulary
 }
 
 interface UserCourseLevelsResponse {
-  user_course_levels: UserCourseLevel[]
+  user_course_level_kanjis: UserCourseLevelKanji[]
+  user_course_level_vocabularies: UserCourseLevelVocabulary[]
+  user_course_level_grammars: UserCourseLevelGrammar[]
 }
 
 export function useUserCourseLevelsV1() {
@@ -68,4 +113,4 @@ export function useUserCourseLevelsV1() {
   }
 }
 
-export type { Course, CourseLevel, UserCourseLevel, UserCourseLevelsResponse }
+export type { Course, CourseLevel, CourseLevelKanji, CourseLevelGrammar, CourseLevelVocabulary, UserCourseLevelKanji, UserCourseLevelGrammar, UserCourseLevelVocabulary, UserCourseLevelsResponse }

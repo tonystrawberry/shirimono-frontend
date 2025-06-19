@@ -60,8 +60,8 @@ export const useCoursesStore = defineStore('courses', () => {
       // Fetch and store the data
       const response = await coursesV1.fetchCourseLevels(slug, pointType)
       if (response) {
-        courseLevels.value[slug][pointType] = response.levels
-        return response.levels
+        courseLevels.value[slug][pointType] = response.course_levels
+        return response.course_levels
       }
       return []
     } catch (e) {

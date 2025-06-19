@@ -47,7 +47,7 @@ export interface CourseLevelsResponse {
     course_level_kanjis_count: number
     course_level_vocabularies_count: number
     course_level_grammars_count: number
-    levels: CourseLevel[]
+    course_levels: CourseLevel[]
   }
 }
 
