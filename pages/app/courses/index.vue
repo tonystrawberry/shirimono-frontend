@@ -27,18 +27,18 @@
           <div>
             <h2 class="text-xl font-semibold mb-2 text-white">{{ course.title }}</h2>
             <p class="text-gray-300 mb-4">{{ getCourseDescription(course.slug) }}</p>
-            <div class="flex gap-8 mb-4 justify-center">
+            <div class="grid grid-cols-3 gap-2 sm:gap-8 mb-4 px-2 sm:px-0">
               <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-indigo-400">{{ course.kanjis_count }}</span>
-                <span class="text-xs text-indigo-300 tracking-wide uppercase">Kanji</span>
+                <span class="text-xl sm:text-2xl font-bold text-indigo-400">{{ course.kanjis_count }}</span>
+                <span class="text-[10px] sm:text-xs text-indigo-300 tracking-wide uppercase">Kanji</span>
               </div>
               <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-violet-400">{{ course.vocabularies_count }}</span>
-                <span class="text-xs text-violet-300 tracking-wide uppercase">Vocabulary</span>
+                <span class="text-xl sm:text-2xl font-bold text-violet-400">{{ course.vocabularies_count }}</span>
+                <span class="text-[10px] sm:text-xs text-violet-300 tracking-wide uppercase">Vocabulary</span>
               </div>
               <div class="flex flex-col items-center">
-                <span class="text-2xl font-bold text-teal-400">{{ course.grammars_count }}</span>
-                <span class="text-xs text-teal-300 tracking-wide uppercase">Grammar</span>
+                <span class="text-xl sm:text-2xl font-bold text-teal-400">{{ course.grammars_count }}</span>
+                <span class="text-[10px] sm:text-xs text-teal-300 tracking-wide uppercase">Grammar</span>
               </div>
             </div>
           </div>

@@ -92,7 +92,8 @@
               :class="{
                 'bg-indigo-700 hover:bg-indigo-600': tab === 'kanji',
                 'bg-violet-700 hover:bg-violet-600': tab === 'vocabulary',
-                'bg-teal-700 hover:bg-teal-600': tab === 'grammar'
+                'bg-teal-700 hover:bg-teal-600': tab === 'grammar',
+                'opacity-40': !hasUserReview(point.id, level.position)
               }"
               @click="startPoint(level, point)"
             >
@@ -117,6 +118,7 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useCoursesStore } from '~/stores/courses'
 import { useUserCoursesStore } from '~/stores/userCourses'
+import { useUserReviewsStore } from '~/stores/userReviews'
 import { useCoursesV1, type CourseLevel, type CoursePoint } from '~/composables/api/v1/useCoursesV1'
 import { useUserCourseLevelsStore } from '~/stores/userCourseLevels'
 import Spinner from '~/components/Spinner.vue'
@@ -131,17 +133,20 @@ const router = useRouter()
 const coursesStore = useCoursesStore()
 const userCoursesStore = useUserCoursesStore()
 const userCourseLevelsStore = useUserCourseLevelsStore()
+const userReviewsStore = useUserReviewsStore()
 const coursesV1 = useCoursesV1()
 
 const loading = computed(() =>
   coursesStore.loading ||
   userCoursesStore.loading ||
-  userCourseLevelsStore.loading
+  userCourseLevelsStore.loading ||
+  userReviewsStore.loading
 )
 const error = computed(() =>
   coursesStore.error ||
   userCoursesStore.error ||
-  userCourseLevelsStore.error
+  userCourseLevelsStore.error ||
+  userReviewsStore.error
 )
 const loadingLevels = computed(() => coursesStore.loadingLevels)
 const levelsError = computed(() => coursesStore.levelsError)
@@ -202,6 +207,34 @@ function getLevelStatus(levelId: number): string | null {
   return userCourseLevelsStore.getLevelStatus(tab.value, levelId)
 }
 
+function hasUserReview(pointId: number, levelPosition: number): boolean {
+  if (!course.value) return false
+  const courseSlug = course.value.slug
+
+  switch (tab.value) {
+    case 'kanji':
+      return userReviewsStore.userReviewKanjis.some(review =>
+        review.kanji_id === pointId &&
+        review.course.slug === courseSlug &&
+        review.course_level_kanji.position === levelPosition
+      )
+    case 'vocabulary':
+      return userReviewsStore.userReviewVocabularies.some(review =>
+        review.vocabulary_id === pointId &&
+        review.course.slug === courseSlug &&
+        review.course_level_vocabulary.position === levelPosition
+      )
+    case 'grammar':
+      return userReviewsStore.userReviewGrammars.some(review =>
+        review.grammar_id === pointId &&
+        review.course.slug === courseSlug &&
+        review.course_level_grammar.position === levelPosition
+      )
+    default:
+      return false
+  }
+}
+
 // Add watch effect to handle course not found
 watchEffect(() => {
   if (!coursesStore.loading && !coursesStore.error && coursesStore.courses.length > 0) {
@@ -217,7 +250,8 @@ onMounted(async () => {
   await Promise.all([
     coursesStore.fetchCourses(),
     userCoursesStore.fetchUserCourses(),
-    userCourseLevelsStore.fetchUserCourseLevels()
+    userCourseLevelsStore.fetchUserCourseLevels(),
+    userReviewsStore.fetchUserReviews()
   ])
   await fetchLevels()
 })
