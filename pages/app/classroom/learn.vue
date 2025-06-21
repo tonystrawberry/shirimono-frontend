@@ -83,6 +83,21 @@
           <!-- Show exercise -->
           <div v-else-if="mode === 'exercise' && currentExercise">
             <ClassroomKanjiExercise
+              v-if="pointType === 'kanji'"
+              :current-exercise="currentExercise"
+              @correct="handleReviewCorrectAnswer"
+              @incorrect="handleIncorrectAnswer"
+              :target-correct-answers="TARGET_CORRECT_ANSWERS"
+            />
+            <ClassroomGrammarExercise
+              v-else-if="pointType === 'grammar'"
+              :current-exercise="currentExercise"
+              @correct="handleReviewCorrectAnswer"
+              @incorrect="handleIncorrectAnswer"
+              :target-correct-answers="TARGET_CORRECT_ANSWERS"
+            />
+            <ClassroomVocabularyExercise
+              v-else-if="pointType === 'vocabulary'"
               :current-exercise="currentExercise"
               @correct="handleReviewCorrectAnswer"
               @incorrect="handleIncorrectAnswer"
@@ -103,7 +118,7 @@ import {
   MinusIcon,
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
-import { useCourseLessonsV1, type Kanji, type Grammar, type Vocabulary, type Exercise } from '~/composables/api/v1/useCourseLessonsV1'
+import { useCourseLessonsV1, type Kanji, type Grammar, type Vocabulary, type KanjiExercise, type GrammarExercise, type VocabularyExercise } from '~/composables/api/v1/useCourseLessonsV1'
 import { useUserReviewsV1 } from '~/composables/api/v1/useUserReviewsV1'
 import { useRouter } from 'vue-router'
 import type { ClassroomNavigationState } from '~/types/navigation'
@@ -113,6 +128,8 @@ import ClassroomKanjiLesson from '~/components/classroom/ClassroomKanjiLesson.vu
 import ClassroomGrammarLesson from '~/components/classroom/ClassroomGrammarLesson.vue'
 import ClassroomVocabularyLesson from '~/components/classroom/ClassroomVocabularyLesson.vue'
 import ClassroomKanjiExercise from '~/components/classroom/ClassroomKanjiExercise.vue'
+import ClassroomGrammarExercise from '~/components/classroom/ClassroomGrammarExercise.vue'
+import ClassroomVocabularyExercise from '~/components/classroom/ClassroomVocabularyExercise.vue'
 
 const router = useRouter()
 
@@ -145,7 +162,7 @@ const error = ref<Error | null>(null)
 const mode = ref<'lesson' | 'exercise'>('lesson')
 const lessons = ref<LessonItem[]>([])
 const lessonViewIndex = ref(0)
-const exercises = ref<Exercise[]>([])
+const exercises = ref<(KanjiExercise | GrammarExercise | VocabularyExercise)[]>([])
 const currentExerciseIndex = ref(0)
 const lastBatchLessonViewIndex = ref(LESSONS_BATCH_SIZE - 1)
 
@@ -203,12 +220,15 @@ async function loadLessons() {
     }
 
     // Initialize lessons with exercises
-    lessons.value = lessons.value.map(lesson => ({
+    lessons.value = lessons.value.map((lesson: LessonItem) => ({
       ...lesson,
-      exercises: lesson.exercises.map(exercise => ({
-        ...exercise,
-        numberOfCorrectAnswers: 0
-      }))
+      exercises: lesson.exercises.map((exercise: Exercise) => {
+        const newExercise: Exercise & { numberOfCorrectAnswers: number } = {
+          ...exercise,
+          numberOfCorrectAnswers: 0
+        };
+        return newExercise;
+      })
     }))
 
     // Initialize exercises as empty
@@ -250,7 +270,7 @@ function reinjectLessonsForReview() {
     const lesson = lessons.value[i]
     console.log("lesson", lesson)
     // Get references to undone exercises from the original lesson
-    const undoneExercises = lesson.exercises.filter((ex: Exercise) => (ex.numberOfCorrectAnswers ?? 0) < TARGET_CORRECT_ANSWERS)
+    const undoneExercises = lesson.exercises.filter((ex: KanjiExercise | GrammarExercise | VocabularyExercise) => (ex.numberOfCorrectAnswers ?? 0) < TARGET_CORRECT_ANSWERS)
 
     console.log("undoneExercises", undoneExercises)
     // Add undoneExercises as is to exercises

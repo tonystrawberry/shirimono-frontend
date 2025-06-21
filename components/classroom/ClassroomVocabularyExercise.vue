@@ -11,7 +11,7 @@
     </div>
 
     <div class="text-8xl font-bold text-white mb-8">
-      {{ currentExercise.question }}
+      {{ questionText }}
     </div>
 
     <!-- Exercise Question -->
@@ -21,7 +21,7 @@
       </span>
     </div>
     <div class="text-xl text-white/90 mb-8">
-      {{ currentExercise.question }}
+      {{ questionText }}
     </div>
 
     <div class="w-full max-w-md">
@@ -107,10 +107,10 @@
 <script setup lang="ts">
 import { ref, computed, defineComponent } from 'vue'
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
-import type { KanjiExercise } from '~/composables/api/v1/useCourseLessonsV1'
+import type { VocabularyExercise } from '~/composables/api/v1/useCourseLessonsV1'
 
 const props = defineProps<{
-  currentExercise: KanjiExercise & {
+  currentExercise: VocabularyExercise & {
     numberOfCorrectAnswers?: number
   },
   targetCorrectAnswers: number
@@ -124,6 +124,10 @@ const showingAnswer = ref(false)
 const isCorrect = ref(false)
 const selectedAnswer = ref('')
 const lastShownAnswers = ref<string[]>([])
+
+const questionText = computed(() => {
+  return props.currentExercise.question
+})
 
 // Computed
 const exerciseTypeLabel = computed(() => {
@@ -153,9 +157,11 @@ const effectiveCorrectAnswers = computed(() => {
 
 // Methods
 function checkAnswer() {
-  isCorrect.value = props.currentExercise.accepted_answers.some(answer =>
-    answer.toLowerCase() === userAnswer.value.toLowerCase()
-  )
+  isCorrect.value = props.currentExercise.accepted_answers.some(answer => {
+    console.log("answer", answer)
+    console.log("userAnswer", userAnswer.value)
+    return answer.toLowerCase() === userAnswer.value.toLowerCase()
+  })
   showingAnswer.value = true
 }
 
@@ -184,6 +190,6 @@ function continueAfterAnswer() {
 
 <script lang="ts">
 export default defineComponent({
-  name: 'ClassroomKanjiExercise'
+  name: 'ClassroomVocabularyExercise'
 })
 </script>

@@ -1,6 +1,7 @@
 import { API_BASE_URL } from '../config'
 import { useApiFetch } from '~/composables/useApiFetch'
 import type { CourseLevelGrammar, CourseLevelKanji, CourseLevelVocabulary } from './useUserCourseLevelsV1'
+import type { Exercise } from './useCourseLevelsV1'
 
 type CoursePointType = 'CourseLevelKanji' | 'CourseLevelVocabulary' | 'CourseLevelGrammar'
 
@@ -54,6 +55,42 @@ export interface UserReviewGrammar {
   course_level_grammar: CourseLevelGrammar
 }
 
+export interface DueReviewKanji {
+  id: number;
+  memorization_status: string;
+  number_of_total_reviews: number;
+  number_of_correct_reviews: number;
+  next_review_at: string;
+  kanji_exercise: Exercise;
+  pointType: 'kanji' | 'vocabulary' | 'grammar';
+}
+
+export interface DueReviewVocabulary {
+  id: number;
+  memorization_status: string;
+  number_of_total_reviews: number;
+  number_of_correct_reviews: number;
+  next_review_at: string;
+  vocabulary_exercise: Exercise;
+  pointType: 'vocabulary';
+}
+
+export interface DueReviewGrammar {
+  id: number;
+  memorization_status: string;
+  number_of_total_reviews: number;
+  number_of_correct_reviews: number;
+  next_review_at: string;
+  grammar_exercise: Exercise;
+  pointType: 'grammar';
+}
+
+export interface DueReviewsResponse {
+  user_review_kanjis: DueReviewKanji[]
+  user_review_vocabularies: DueReviewVocabulary[]
+  user_review_grammars: DueReviewGrammar[]
+}
+
 export interface UserReviewsResponse {
   user_review_kanjis: UserReviewKanji[]
   user_review_vocabularies: UserReviewVocabulary[]
@@ -67,6 +104,19 @@ export function useUserReviewsV1() {
     }).execute()
 
     const response = data.value as UserReviewsResponse
+    return {
+      user_review_kanjis: response?.user_review_kanjis || [],
+      user_review_vocabularies: response?.user_review_vocabularies || [],
+      user_review_grammars: response?.user_review_grammars || []
+    }
+  }
+
+  async function fetchDueReviews(): Promise<DueReviewsResponse> {
+    const { data } = await useApiFetch(`${API_BASE_URL}/api/v1/user_reviews/due_reviews`, {
+      method: 'GET'
+    }).execute()
+
+    const response = data.value as DueReviewsResponse
     return {
       user_review_kanjis: response?.user_review_kanjis || [],
       user_review_vocabularies: response?.user_review_vocabularies || [],
@@ -114,6 +164,7 @@ export function useUserReviewsV1() {
 
   return {
     fetchUserReviews,
+    fetchDueReviews,
     submitCorrectReview,
     submitIncorrectReview
   }

@@ -11,7 +11,7 @@
     </div>
 
     <div class="text-8xl font-bold text-white mb-8">
-      {{ currentExercise.question }}
+      {{ questionText }}
     </div>
 
     <!-- Exercise Question -->
@@ -21,7 +21,7 @@
       </span>
     </div>
     <div class="text-xl text-white/90 mb-8">
-      {{ currentExercise.question }}
+      {{ questionText }}
     </div>
 
     <div class="w-full max-w-md">
@@ -107,10 +107,10 @@
 <script setup lang="ts">
 import { ref, computed, defineComponent } from 'vue'
 import { ArrowLeftIcon } from '@heroicons/vue/20/solid'
-import type { KanjiExercise } from '~/composables/api/v1/useCourseLessonsV1'
+import type { GrammarExercise } from '~/composables/api/v1/useCourseLessonsV1'
 
 const props = defineProps<{
-  currentExercise: KanjiExercise & {
+  currentExercise: GrammarExercise & {
     numberOfCorrectAnswers?: number
   },
   targetCorrectAnswers: number
@@ -124,6 +124,20 @@ const showingAnswer = ref(false)
 const isCorrect = ref(false)
 const selectedAnswer = ref('')
 const lastShownAnswers = ref<string[]>([])
+
+const questionText = computed(() => {
+  if (props.currentExercise.question) {
+    return props.currentExercise.question.replace(/{placeholder}/g, '__')
+  }
+  return props.currentExercise.question
+})
+
+const questionTranslationText = computed(() => {
+  if (props.currentExercise.question_translation) {
+    return props.currentExercise.question_translation
+  }
+  return ''
+})
 
 // Computed
 const exerciseTypeLabel = computed(() => {
@@ -184,6 +198,6 @@ function continueAfterAnswer() {
 
 <script lang="ts">
 export default defineComponent({
-  name: 'ClassroomKanjiExercise'
+  name: 'ClassroomGrammarExercise'
 })
 </script>
