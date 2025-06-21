@@ -3,7 +3,7 @@ import { API_BASE_URL } from '../config'
 import { useApiFetch } from '~/composables/useApiFetch'
 
 export interface CourseLevel {
-  id: string
+  id: number
   title: string
   description: string
   position: number
@@ -14,7 +14,7 @@ export interface CourseLevel {
 }
 
 export interface Kanji {
-  id: string
+  id: number
   title: string
   meanings: string[]
   kunyomi_readings: string[]
@@ -25,7 +25,7 @@ export interface Kanji {
 }
 
 export interface RelatedKanji {
-  id: string
+  id: number
   title: string
   meanings: string[]
 }
@@ -33,7 +33,7 @@ export interface RelatedKanji {
 type CoursePointType = 'CourseLevelKanji' | 'CourseLevelVocabulary' | 'CourseLevelGrammar'
 
 export interface Vocabulary {
-  id: string
+  id: number
   title: string
   kana: string
   meanings: string[]
@@ -45,14 +45,14 @@ export interface Vocabulary {
 }
 
 export interface VocabReference {
-  id: string
+  id: number
   title: string
   kana: string
   meanings: string[]
 }
 
 export interface Grammar {
-  id: string
+  id: number
   title: string
   meanings: string[]
   example_sentences: ExampleSentence[]
@@ -60,7 +60,7 @@ export interface Grammar {
 }
 
 export interface ExampleSentence {
-  id: string
+  id: number
   sentence: string
   sentence_html: string
   translation: string

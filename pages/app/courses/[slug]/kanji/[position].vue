@@ -11,8 +11,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-gray-400">
-      Loading kanji level...
+    <div v-if="loading" class="flex justify-center py-8">
+      <Spinner />
     </div>
     <div v-else-if="error" class="text-red-400">
       {{ error }}
@@ -30,14 +30,14 @@
               <div class="flex gap-2">
                 <button
                   @click="navigateLevel(-1)"
-                  :disabled="level <= 1"
+                  :disabled="position <= 1"
                   class="p-1 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeftIcon class="w-5 h-5 text-gray-400" />
                 </button>
                 <button
                   @click="navigateLevel(1)"
-                  :disabled="level >= courseLevelCount"
+                  :disabled="position >= courseLevelCount"
                   class="p-1 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRightIcon class="w-5 h-5 text-gray-400" />
@@ -53,7 +53,7 @@
               :class="[
                 'px-4 py-3 text-left hover:bg-gray-800 flex items-center gap-3 transition-colors group',
                 selectedItem?.id === item.id ? 'bg-gray-800 border-l-4 border-indigo-500' : 'border-l-4 border-transparent',
-                ignoredItems.has(item.id) ? 'opacity-50' : ''
+                ignoredItems.has(item.id.toString()) ? 'opacity-50' : ''
               ]"
             >
               <span class="text-2xl text-white">{{ item.title }}</span>
@@ -102,10 +102,10 @@
                             ]"
                           >
                             <component
-                              :is="ignoredItems.has(item.id) ? EyeIcon : EyeSlashIcon"
+                              :is="ignoredItems.has(item.id.toString()) ? EyeIcon : EyeSlashIcon"
                               class="w-5 h-5 mr-3 text-gray-400"
                             />
-                            {{ ignoredItems.has(item.id) ? 'Unignore' : 'Ignore' }}
+                            {{ ignoredItems.has(item.id.toString()) ? 'Unignore' : 'Ignore' }}
                           </button>
                         </MenuItem>
                       </MenuItems>
@@ -201,6 +201,7 @@ import {
   AcademicCapIcon
 } from '@heroicons/vue/24/outline'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import Spinner from '~/components/Spinner.vue'
 import { useCourseLevelsStore } from '~/stores/courseLevels'
 import { useCoursesStore } from '~/stores/courses'
 import { useUserReviewsStore } from '~/stores/userReviews'
@@ -216,12 +217,12 @@ const coursesStore = useCoursesStore()
 const courseLevelsStore = useCourseLevelsStore()
 const userReviewsStore = useUserReviewsStore()
 
-const level = computed(() => parseInt(route.params.level as string))
+const position = computed(() => parseInt(route.params.position as string))
 const selectedItem = ref<Kanji | null>(null)
 const ignoredItems = ref(new Set<string>())
 
 // Computed properties for the view
-const loading = computed(() => courseLevelsStore.loading)
+const loading = computed(() => courseLevelsStore.loading || userReviewsStore.loading)
 const error = computed(() => courseLevelsStore.error)
 const currentLevel = computed(() => courseLevelsStore.currentLevel)
 const kanjis = computed(() => currentLevel.value?.kanjis || [])
@@ -229,13 +230,11 @@ const course = computed(() => coursesStore.courses.find(c => c.slug === route.pa
 const courseLevelCount = computed(() => course.value?.course_level_kanjis_count || 0)
 
 // Function to get reviews for a specific kanji
-const getKanjiReviews = (kanjiId: string) => {
-  console.log("userReviewsStore.reviews", userReviewsStore.reviews)
-  console.log("kanjiId", kanjiId)
-
-  return userReviewsStore.reviews.filter(review =>
-    review.course_point.type === 'CourseLevelKanji' &&
-    review.course_point.id === kanjiId
+const getKanjiReviews = (kanjiId: number) => {
+  return userReviewsStore.userReviewKanjis.filter(userReviewKanji =>
+    userReviewKanji.kanji_id === kanjiId &&
+    userReviewKanji.course.slug === route.params.slug &&
+    userReviewKanji.course_level_kanji.position === parseInt(route.params.position as string)
   )
 }
 
@@ -246,7 +245,7 @@ watch([route], async () => {
 
 // Watch for kanjis changes to select the point from URL
 watch([kanjis], () => {
-  const state = history.state as { selectedPointId?: string }
+  const state = history.state as { selectedPointId?: number }
   if (kanjis.value.length > 0 && state?.selectedPointId) {
     const point = kanjis.value.find(k => k.id === state.selectedPointId)
     if (point) {
@@ -259,7 +258,7 @@ async function fetchData() {
   if (coursesStore.courses.length === 0) {
     await coursesStore.fetchCourses()
   }
-  await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'kanji', level.value)
+  await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'kanji', position.value)
   await userReviewsStore.fetchUserReviews()
 }
 
@@ -268,17 +267,17 @@ function selectItem(item: Kanji) {
 }
 
 function navigateLevel(delta: number) {
-  const newLevel = level.value + delta
+  const newLevel = position.value + delta
   if (newLevel >= 1) {
     router.push(`/app/courses/${route.params.slug}/kanji/${newLevel}`)
   }
 }
 
-function toggleIgnoreItem(itemId: string) {
-  if (ignoredItems.value.has(itemId)) {
-    ignoredItems.value.delete(itemId)
+function toggleIgnoreItem(itemId: number) {
+  if (ignoredItems.value.has(itemId.toString())) {
+    ignoredItems.value.delete(itemId.toString())
   } else {
-    ignoredItems.value.add(itemId)
+    ignoredItems.value.add(itemId.toString())
   }
 }
 </script>

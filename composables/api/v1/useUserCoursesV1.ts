@@ -33,8 +33,6 @@ export const useUserCoursesV1 = () => {
         method: 'GET'
       }).execute()
 
-      console.log("data", data.value)
-
       const response = data.value as UserCoursesResponse
       return response?.user_courses || []
     } catch (e) {

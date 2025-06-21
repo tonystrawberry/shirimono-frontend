@@ -27,7 +27,6 @@ export const useAuth = () => {
   const expiryCookie = useCookie('expiry', cookieOptions)
 
   const setAuthTokens = (tokens: AuthTokens) => {
-    console.log("setting auth tokens", tokens)
     accessTokenCookie.value = tokens.accessToken
     clientCookie.value = tokens.client
     uidCookie.value = tokens.uid

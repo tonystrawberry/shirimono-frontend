@@ -11,8 +11,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-gray-400">
-      Loading vocabulary level...
+    <div v-if="loading" class="flex justify-center py-8">
+      <Spinner />
     </div>
     <div v-else-if="error" class="text-red-400">
       {{ error }}
@@ -30,14 +30,14 @@
               <div class="flex gap-2">
                 <button
                   @click="navigateLevel(-1)"
-                  :disabled="level <= 1"
+                  :disabled="position <= 1"
                   class="p-1 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeftIcon class="w-5 h-5 text-gray-400" />
                 </button>
                 <button
                   @click="navigateLevel(1)"
-                  :disabled="level >= courseLevelCount"
+                  :disabled="position >= courseLevelCount"
                   class="p-1 rounded hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRightIcon class="w-5 h-5 text-gray-400" />
@@ -100,10 +100,10 @@
                           ]"
                         >
                           <component
-                            :is="ignoredItems.has(item.id) ? EyeIcon : EyeSlashIcon"
+                            :is="ignoredItems.has(item.id.toString()) ? EyeIcon : EyeSlashIcon"
                             class="w-5 h-5 mr-3 text-gray-400"
                           />
-                          {{ ignoredItems.has(item.id) ? 'Unignore' : 'Ignore' }}
+                          {{ ignoredItems.has(item.id.toString()) ? 'Unignore' : 'Ignore' }}
                         </button>
                       </MenuItem>
                     </MenuItems>
@@ -230,6 +230,7 @@ import {
   BookOpenIcon
 } from '@heroicons/vue/24/outline'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
+import Spinner from '~/components/Spinner.vue'
 import { useCourseLevelsStore } from '~/stores/courseLevels'
 import { useCoursesStore } from '~/stores/courses'
 import { useUserReviewsStore } from '~/stores/userReviews'
@@ -245,24 +246,24 @@ const coursesStore = useCoursesStore()
 const courseLevelsStore = useCourseLevelsStore()
 const userReviewsStore = useUserReviewsStore()
 
-const level = computed(() => parseInt(route.params.level as string))
+const position = computed(() => parseInt(route.params.position as string))
 const selectedItem = ref<Vocabulary | null>(null)
 const currentTab = ref('EXAMPLE SENTENCES')
 const ignoredItems = ref(new Set<string>())
 
 // Computed properties for the view
-const loading = computed(() => courseLevelsStore.loading)
+const loading = computed(() => courseLevelsStore.loading || userReviewsStore.loading)
 const error = computed(() => courseLevelsStore.error)
 const currentLevel = computed(() => courseLevelsStore.currentLevel)
 const vocabularies = computed(() => currentLevel.value?.vocabularies || [])
 const course = computed(() => coursesStore.courses.find(c => c.slug === route.params.slug))
 const courseLevelCount = computed(() => course.value?.course_level_vocabularies_count || 0)
 
-// Function to get reviews for a specific vocabulary
-const getVocabularyReviews = (vocabularyId: string) => {
-  return userReviewsStore.reviews.filter(review =>
-    review.course_point.type === 'CourseLevelVocabulary' &&
-    review.course_point.id === vocabularyId
+const getVocabularyReviews = (vocabularyId: number) => {
+  return userReviewsStore.userReviewVocabularies.filter(userReviewVocabulary =>
+    userReviewVocabulary.vocabulary_id === vocabularyId &&
+    userReviewVocabulary.course.slug === route.params.slug &&
+    userReviewVocabulary.course_level_vocabulary.position === parseInt(route.params.position as string)
   )
 }
 
@@ -273,7 +274,7 @@ watch([route], async () => {
 
 // Watch for vocabularies changes to select the point from URL
 watch([vocabularies], () => {
-  const state = history.state as { selectedPointId?: string }
+  const state = history.state as { selectedPointId?: number }
   if (vocabularies.value.length > 0 && state?.selectedPointId) {
     const point = vocabularies.value.find(v => v.id === state.selectedPointId)
     if (point) {
@@ -286,7 +287,7 @@ async function fetchData() {
   if (coursesStore.courses.length === 0) {
     await coursesStore.fetchCourses()
   }
-  await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'vocabulary', level.value)
+  await courseLevelsStore.fetchCourseLevel(route.params.slug as string, 'vocabulary', position.value)
   await userReviewsStore.fetchUserReviews()
 }
 
@@ -295,17 +296,17 @@ function selectItem(item: Vocabulary) {
 }
 
 function navigateLevel(delta: number) {
-  const newLevel = level.value + delta
+  const newLevel = position.value + delta
   if (newLevel >= 1) {
     router.push(`/app/courses/${route.params.slug}/vocabulary/${newLevel}`)
   }
 }
 
-function toggleIgnoreItem(itemId: string) {
-  if (ignoredItems.value.has(itemId)) {
-    ignoredItems.value.delete(itemId)
+function toggleIgnoreItem(itemId: number) {
+  if (ignoredItems.value.has(itemId.toString())) {
+    ignoredItems.value.delete(itemId.toString())
   } else {
-    ignoredItems.value.add(itemId)
+    ignoredItems.value.add(itemId.toString())
   }
 }
 

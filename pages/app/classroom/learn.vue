@@ -245,8 +245,6 @@ function reinjectLessonsForReview() {
   // Clear current exercises
   exercises.value = []
 
-  console.log("lessonViewIndex", lessonViewIndex.value)
-
   // Add lessons up to current lessonViewIndex back to exercises if they have undone exercises
   for (let i = 0; i <= lessonViewIndex.value; i++) {
     const lesson = lessons.value[i]

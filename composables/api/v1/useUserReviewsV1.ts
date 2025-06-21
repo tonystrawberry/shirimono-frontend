@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config'
 import { useApiFetch } from '~/composables/useApiFetch'
+import type { CourseLevelGrammar, CourseLevelKanji, CourseLevelVocabulary } from './useUserCourseLevelsV1'
 
 type CoursePointType = 'CourseLevelKanji' | 'CourseLevelVocabulary' | 'CourseLevelGrammar'
 
@@ -11,6 +12,7 @@ export interface CoursePoint {
 export interface Course {
   id: string
   title: string
+  slug: string
 }
 
 export interface UserReviewKanji {
@@ -20,6 +22,10 @@ export interface UserReviewKanji {
   number_of_correct_reviews: number
   next_review_at: string
   kanji_id: number
+  user_course_level_kanji_link_id: number
+  kanji_exercise_id: number,
+  course: Course
+  course_level_kanji: CourseLevelKanji
 }
 
 export interface UserReviewVocabulary {
@@ -29,6 +35,10 @@ export interface UserReviewVocabulary {
   number_of_correct_reviews: number
   next_review_at: string
   vocabulary_id: number
+  user_course_level_vocabulary_link_id: number
+  vocabulary_exercise_id: number,
+  course: Course
+  course_level_vocabulary: CourseLevelVocabulary
 }
 
 export interface UserReviewGrammar {
@@ -38,6 +48,10 @@ export interface UserReviewGrammar {
   number_of_correct_reviews: number
   next_review_at: string
   grammar_id: number
+  user_course_level_grammar_link_id: number
+  grammar_exercise_id: number,
+  course: Course
+  course_level_grammar: CourseLevelGrammar
 }
 
 export interface UserReviewsResponse {

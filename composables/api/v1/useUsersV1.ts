@@ -24,14 +24,10 @@ export const useUsersV1 = () => {
     loading.value = true
     error.value = null
 
-    console.log("calling fetchUser")
-
     try {
       const { data, error: fetchError } = await useApiFetch(`${API_BASE_URL}/api/v1/user`, {
         method: 'GET'
       }).execute()
-
-      console.log("data", data.value)
 
       if (data.value) {
         return data.value as User
@@ -43,7 +39,6 @@ export const useUsersV1 = () => {
 
       return null
     } catch (e) {
-      console.log("error", e)
       error.value = e as Error
       return null
     } finally {
