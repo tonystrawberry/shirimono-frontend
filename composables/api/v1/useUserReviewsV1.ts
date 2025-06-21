@@ -76,7 +76,7 @@ export function useUserReviewsV1() {
 
   async function submitCorrectReview(
     courseSlug: string,
-    level: number,
+    position: number,
     pointExerciseType: string,
     pointExerciseId: number
   ) {
@@ -84,7 +84,7 @@ export function useUserReviewsV1() {
       method: 'POST',
       body: {
         course_slug: courseSlug,
-        level: level,
+        position: position,
         point_exercise_type: pointExerciseType,
         point_exercise_id: pointExerciseId
       }

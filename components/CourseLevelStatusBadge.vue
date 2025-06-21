@@ -3,7 +3,7 @@
   <div class="flex items-center gap-2">
     <span
       v-if="status"
-      class="px-2 py-0.5 text-xs font-medium rounded-full"
+      class="px-1.5 py-0.5 text-xs font-medium rounded-xs"
       :class="statusClasses"
     >
       {{ statusText }}
@@ -11,7 +11,7 @@
     <button
       v-if="showStartButton"
       @click="startLesson"
-      class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
+      class="cursor-pointer inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md transition-colors"
       :class="{
         'bg-indigo-50 text-indigo-700 hover:bg-indigo-100': props.pointType === 'kanji',
         'bg-violet-50 text-violet-700 hover:bg-violet-100': props.pointType === 'vocabulary',
@@ -31,8 +31,9 @@ import type { ClassroomNavigationState } from '~/types/navigation'
 
 const props = defineProps<{
   status: CourseLevelStatus | null | undefined
-  courseSlug: string
-  pointType: 'kanji' | 'grammar' | 'vocabulary' | ''
+  courseSlug: string | null
+  pointType: 'kanji' | 'grammar' | 'vocabulary' | null
+  position: number | null
   level: {
     id: number
     position: number
@@ -41,23 +42,21 @@ const props = defineProps<{
 }>()
 
 const showStartButton = computed(() => {
-  return props.status === 'ready' || props.status === 'lessons_not_completed'
+  return props.status === 'ready' || props.status === 'partially_in_progress'
 })
 
 const classroomNavigation = useState<ClassroomNavigationState>('classroom-navigation', () => ({
-  courseSlug: '',
-  pointType: '',
-  level: null
+  courseSlug: null,
+  pointType: null,
+  position: null
 }))
 
 async function startLesson() {
-  console.log("startLesson", props.courseSlug, props.pointType, props.level)
-
   // Set the navigation state
   classroomNavigation.value = {
     courseSlug: props.courseSlug,
     pointType: props.pointType,
-    level: props.level.position
+    position: props.level.position
   }
 
   // Navigate to the classroom page
@@ -68,15 +67,15 @@ async function startLesson() {
 
 const statusClasses = computed(() => {
   switch (props.status) {
-    case 'ready':
+    case 'not_ready':
       return 'bg-gray-100 text-gray-800'
-    case 'lessons_not_completed':
+    case 'ready':
+      return 'bg-green-100 text-green-800'
+    case 'partially_in_progress':
       return 'bg-yellow-100 text-yellow-800'
-    case 'in_progress':
+    case 'all_in_progress':
       return 'bg-blue-100 text-blue-800'
-    case 'in_progress_advanced':
-      return 'bg-purple-100 text-purple-800'
-    case 'done':
+    case 'completed':
       return 'bg-green-100 text-green-800'
     default:
       return 'bg-gray-100 text-gray-800'
@@ -85,15 +84,15 @@ const statusClasses = computed(() => {
 
 const statusText = computed(() => {
   switch (props.status) {
+    case 'not_ready':
+      return 'Not Ready'
     case 'ready':
       return 'Ready to Start'
-    case 'lessons_not_completed':
-      return 'Lessons in Progress'
-    case 'in_progress':
-      return 'In Progress'
-    case 'in_progress_advanced':
-      return 'Advanced'
-    case 'done':
+    case 'partially_in_progress':
+      return 'In Progress (Lessons)'
+    case 'all_in_progress':
+      return 'In Progress (Exercises)'
+    case 'completed':
       return 'Completed'
     default:
       return 'Unknown'

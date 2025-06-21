@@ -18,13 +18,12 @@ interface CourseLevel {
   course: Course
 }
 
-// Course level status values
 export type CourseLevelStatus =
+  | 'not_ready'           // User has not started the level
   | 'ready'               // Initial state, ready to start
-  | 'lessons_not_completed' // User has started but not completed all lessons
-  | 'in_progress'         // All lessons completed, working on exercises
-  | 'in_progress_advanced' // Working on advanced exercises
-  | 'done'                // All exercises completed with required mastery
+  | 'partially_in_progress' // User has started but not completed all lessons
+  | 'all_in_progress' // User has started but not completed all lessons
+  | 'completed'                // All exercises completed with required mastery
 
 interface CourseLevelKanji {
   id: number

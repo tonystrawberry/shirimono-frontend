@@ -10,8 +10,8 @@
       </div>
     </div>
 
-    <div v-if="loading" class="text-gray-400">
-      Loading courses...
+    <div v-if="loading" class="flex justify-center py-8">
+      <Spinner />
     </div>
     <div v-else-if="error" class="text-red-400">
       Error loading courses. Please try again later.
@@ -170,8 +170,8 @@ import {
 import { AcademicCapIcon, BookOpenIcon, Cog6ToothIcon, ChevronLeftIcon } from '@heroicons/vue/24/outline'
 import { useRouter } from 'vue-router'
 import { useCoursesStore } from '~/stores/courses'
-import { useUserCoursesStore } from '~/stores/userCourses'
 import type { Course } from '~/composables/api/v1/useCoursesV1'
+import Spinner from '~/components/Spinner.vue'
 
 definePageMeta({
   layout: 'app'

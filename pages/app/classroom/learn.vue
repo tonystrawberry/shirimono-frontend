@@ -123,7 +123,7 @@ const TARGET_CORRECT_ANSWERS = 1
 // Route and Navigation State
 const classroomNavigation = useState<ClassroomNavigationState>('classroom-navigation')
 const courseSlug = computed(() => classroomNavigation.value.courseSlug)
-const level = computed(() => classroomNavigation.value.level)
+const position = computed(() => classroomNavigation.value.position)
 const pointType = computed(() => classroomNavigation.value.pointType)
 
 // Types
@@ -172,8 +172,8 @@ const allDone = computed(() => {
 
 // Methods
 async function loadLessons() {
-  if (!courseSlug.value || !level.value || !pointType.value) {
-    error.value = new Error('Missing required parameters: course slug, level or type')
+  if (!courseSlug.value || !position.value || !pointType.value) {
+    error.value = new Error('Missing required parameters: course slug, position or type')
     loading.value = false
     return
   }
@@ -184,17 +184,17 @@ async function loadLessons() {
 
     switch (pointType.value) {
       case 'kanji': {
-        response = await fetchKanjiLessons(courseSlug.value, level.value)
+        response = await fetchKanjiLessons(courseSlug.value, position.value)
         lessons.value = response.kanjis || []
         break
       }
       case 'grammar': {
-        response = await fetchGrammarLessons(courseSlug.value, level.value)
+        response = await fetchGrammarLessons(courseSlug.value, position.value)
         lessons.value = response.grammars || []
         break
       }
       case 'vocabulary': {
-        response = await fetchVocabularyLessons(courseSlug.value, level.value)
+        response = await fetchVocabularyLessons(courseSlug.value, position.value)
         lessons.value = response.vocabularies || []
         break
       }
@@ -279,6 +279,10 @@ function reinjectLessonsForReview() {
 }
 
 async function handleReviewCorrectAnswer() {
+  if (!courseSlug.value || !position.value || !pointType.value) {
+    return;
+  }
+
   // Increment correct answers for current exercise
   const currentExercise = exercises.value[currentExerciseIndex.value]
   if (!currentExercise.numberOfCorrectAnswers) {
@@ -291,7 +295,7 @@ async function handleReviewCorrectAnswer() {
     try {
       await submitCorrectReview(
         courseSlug.value,
-        level.value,
+        position.value,
         pointType.value,
         currentExercise.id
       )
@@ -345,8 +349,8 @@ function goToPreviousLesson() {
 // Lifecycle
 onMounted(() => {
   // Validate navigation state
-  if (!courseSlug.value || !level.value || !pointType.value) {
-    console.log("Invalid navigation state, redirecting to courses", courseSlug.value, level.value, pointType.value)
+  if (!courseSlug.value || !position.value || !pointType.value) {
+    console.log("Invalid navigation state, redirecting to courses", courseSlug.value, position.value, pointType.value)
     navigateTo('/app/courses')
     return
   }

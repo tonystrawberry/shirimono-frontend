@@ -34,7 +34,7 @@
             </p>
 
             <!-- Input type review -->
-            <template v-if="currentExercise.question_types.includes('input')">
+            <template v-if="currentExercise.question_types.includes('text')">
               <p class="text-white/70">The correct answer was:</p>
               <p class="text-white text-xl mt-2">
                 {{ currentExercise.accepted_answers.join(' or ') }}
@@ -71,7 +71,7 @@
       </template>
 
       <!-- Input Exercise -->
-      <template v-else-if="currentExercise.question_types.includes('input')">
+      <template v-else-if="currentExercise.question_types.includes('text')">
         <div class="relative">
           <input
             v-model="userAnswer"

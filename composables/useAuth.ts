@@ -1,4 +1,4 @@
-import { useCookie, useRuntimeConfig } from '#app'
+import { useCookie, useRuntimeConfig } from 'nuxt/app'
 
 export interface AuthTokens {
   accessToken: string

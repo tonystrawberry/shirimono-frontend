@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-5xl mx-auto pt-4 pb-10 px-4">
-    <div v-if="loading" class="text-gray-400">
-      Loading course...
+    <div v-if="loading" class="flex justify-center py-8">
+      <Spinner />
     </div>
     <div v-else-if="error" class="text-red-400">
       Error loading course. Please try again later.
@@ -54,7 +54,7 @@
 
       <!-- Loading State -->
       <div v-if="loadingLevels" class="text-gray-400">
-        Loading levels...
+        <Spinner />
       </div>
       <!-- Error State -->
       <div v-else-if="levelsError" class="text-red-400">
@@ -72,12 +72,13 @@
               }">
               <span class="text-white font-bold">{{ level.position }}</span>
             </span>
-            <span class="text-lg font-semibold text-white ml-3">{{ level.title }}</span>
+            <span class="text-lg font-semibold text-white ml-3 mr-2">{{ level.title }}</span>
             <CourseLevelStatusBadge
-              :status="getLevelStatus(level.id)"
+              :status="getLevelStatus(level.id) as CourseLevelStatus | null"
               :course-slug="course.slug"
               :point-type="tab"
               :level="level"
+              :position="level.position"
             />
           </div>
 
@@ -118,6 +119,8 @@ import { useCoursesStore } from '~/stores/courses'
 import { useUserCoursesStore } from '~/stores/userCourses'
 import { useCoursesV1, type CourseLevel, type CoursePoint } from '~/composables/api/v1/useCoursesV1'
 import { useUserCourseLevelsStore } from '~/stores/userCourseLevels'
+import Spinner from '~/components/Spinner.vue'
+import type { CourseLevelStatus } from '~/composables/api/v1/useUserCourseLevelsV1'
 
 definePageMeta({
   layout: 'app'
@@ -196,7 +199,7 @@ function startPoint(level: CourseLevel, point: CoursePoint) {
 }
 
 function getLevelStatus(levelId: number): string | null {
-  return userCourseLevelsStore.getLevelStatus(levelId)
+  return userCourseLevelsStore.getLevelStatus(tab.value, levelId)
 }
 
 // Add watch effect to handle course not found

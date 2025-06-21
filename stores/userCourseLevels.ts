@@ -20,6 +20,12 @@ export const useUserCourseLevelsStore = defineStore('userCourseLevels', {
 
   getters: {
     getLevelStatus: (state) => (type: 'kanji' | 'grammar' | 'vocabulary', levelId: number): CourseLevelStatus | null => {
+      console.log("type", type)
+
+      console.log("state.userCourseLevelKanjis", state.userCourseLevelKanjis)
+      console.log("state.userCourseLevelGrammars", state.userCourseLevelGrammars)
+      console.log("state.userCourseLevelVocabularies", state.userCourseLevelVocabularies)
+
       switch (type) {
         case 'kanji':
           const userLevelKanji = state.userCourseLevelKanjis.find(
